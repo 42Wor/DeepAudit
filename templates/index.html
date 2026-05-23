@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neeura AI - Website Auditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col justify-between">
+
+    <div class="max-w-4xl mx-auto px-4 py-12 w-full">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+                Neeura AI Auditor
+            </h1>
+            <p class="text-gray-400 mt-2">Map public pages, spot conversion flaws, and discover automation options.</p>
+        </header>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl mb-8">
+            <div class="flex flex-col md:flex-row gap-3">
+                <input id="urlInput" type="text" placeholder="e.g., neeura.ai" 
+                    class="bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-white flex-grow focus:outline-none focus:border-teal-500 transition">
+                <button id="auditBtn" onclick="startAudit()" 
+                    class="bg-teal-500 hover:bg-teal-600 text-gray-950 font-bold px-6 py-3 rounded-lg transition duration-200">
+                    Scan Domain
+                </button>
+            </div>
+            <div id="loading" class="hidden mt-4 text-sm text-teal-400 animate-pulse">
+                Mapping domain structure, filtering login pages, and evaluating with AI...
+            </div>
+        </div>
+
+        <div id="results" class="hidden space-y-8">
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+                <h2 class="text-lg font-bold text-gray-300 mb-2">Discovered Public Pages Map</h2>
+                <div id="scannedPages" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+                <h2 class="text-xl font-bold text-teal-400 mb-2">Business Summary</h2>
+                <p id="summaryText" class="text-gray-300"></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+                    <h2 class="text-xl font-bold text-blue-400 mb-3">Identified Features</h2>
+                    <ul id="featuresList" class="list-disc pl-5 space-y-1 text-gray-300"></ul>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+                    <h2 class="text-xl font-bold text-red-400 mb-3">Red Flags & Gaps</h2>
+                    <ul id="issuesList" class="space-y-3 text-gray-300"></ul>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 border border-teal-900/40 p-6 rounded-xl bg-gradient-to-br from-gray-900 to-teal-950/20">
+                <h2 class="text-xl font-bold text-teal-300 mb-3">🚀 Recommended AI Automation Opportunities</h2>
+                <div id="automationContainer" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function startAudit() {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            if (!urlInput) return alert('Please enter a target URL.');
+
+            const btn = document.getElementById('auditBtn');
+            const loading = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+
+            btn.disabled = true;
+            loading.classList.remove('hidden');
+            resultsDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/audit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(errorDetails.error || 'Server processing error occurred.');
+                }
+                const data = await response.json();
+
+                const scannedPages = document.getElementById('scannedPages');
+                scannedPages.innerHTML = '';
+                data.scanned_pages.forEach(url => {
+                    const span = document.createElement('span');
+                    span.className = "bg-gray-850 border border-gray-800 px-3 py-1 rounded text-xs text-teal-400";
+                    span.innerText = url;
+                    scannedPages.appendChild(span);
+                });
+
+                document.getElementById('summaryText').innerText = data.business_summary;
+
+                const featuresList = document.getElementById('featuresList');
+                featuresList.innerHTML = '';
+                data.detected_features.forEach(feat => {
+                    const li = document.createElement('li');
+                    li.innerText = feat;
+                    featuresList.appendChild(li);
+                });
+
+                const issuesList = document.getElementById('issuesList');
+                issuesList.innerHTML = '';
+                data.issues.forEach(issue => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="font-semibold text-red-400">[${issue.type}]</span> ${issue.description}`;
+                    issuesList.appendChild(li);
+                });
+
+                const autoContainer = document.getElementById('automationContainer');
+                autoContainer.innerHTML = '';
+                data.automation_opportunities.forEach(opt => {
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-950 p-4 rounded-lg border border-gray-800";
+                    card.innerHTML = `<h3 class="font-semibold text-teal-400">${opt.opportunity}</h3><p class="text-gray-400 text-sm mt-1">${opt.impact}</p>`;
+                    autoContainer.appendChild(card);
+                });
+
+                resultsDiv.classList.remove('hidden');
+            } catch (err) {
+                alert(err.message || 'Audit execution failed.');
+            } finally {
+                btn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
