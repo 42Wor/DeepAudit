@@ -2,7 +2,7 @@
 
 {% block content %}
 <!-- Hero Section -->
-<div id="hero-wrapper" class="text-center py-10 sm:py-16 px-4 mb-2 transition-all duration-700 ease-in-out">
+<div id="hero-wrapper" class="text-center py-10 sm:py-16 px-4 mb-2">
     <div class="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mb-8 text-xs font-mono tracking-wider uppercase text-gray-500">
         <span>Developed by <a href="https://github.com/42Wor" target="_blank" class="text-gray-300 font-semibold hover:text-white transition-colors">Maaz Waheed</a></span>
         <span class="text-gray-700 select-none">•</span>
@@ -29,20 +29,17 @@
         <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-all flex items-center justify-center gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-base lg:text-lg">
             <i class="fas fa-magic"></i> <span>Generate Audit</span>
         </button>
-        <button type="button" id="fresh-start-btn" onclick="resetAudit()" class="hidden border border-gray-600 hover:border-white text-gray-300 hover:text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-base lg:text-lg">
-            <i class="fas fa-sync-alt"></i> <span>Fresh Start</span>
-        </button>
     </form>
 </div>
 
-<!-- Secondary Status Log Box (Replaces detailed stepper inside body structure) -->
+<!-- Secondary Status Log Box -->
 <div id="body-status-container" class="hidden max-w-4xl mx-auto mb-10 w-full text-center animate-fade-in-up">
     <p id="stepper-status-msg" class="text-gray-400 text-sm font-mono tracking-wide animate-pulse">Establishing stream channel...</p>
 </div>
 
 <!-- Skeleton Loading State -->
 <div id="skeleton-state" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full animate-fade-in-up">
-    <!-- Row 1 Skeleton -->
+    <!-- Top Grid: Summary & Features -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
             <div class="flex items-center gap-3 mb-5 sm:mb-6">
@@ -53,6 +50,7 @@
                 <div class="h-4 bg-white/10 rounded w-full"></div>
                 <div class="h-4 bg-white/10 rounded w-full"></div>
                 <div class="h-4 bg-white/10 rounded w-5/6"></div>
+                <div class="h-4 bg-white/10 rounded w-4/5"></div>
             </div>
         </div>
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
@@ -60,14 +58,16 @@
                 <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
                 <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
             </div>
-            <div class="grid grid-cols-2 gap-3 flex-grow">
-                <div class="h-20 bg-white/10 rounded-2xl"></div>
-                <div class="h-20 bg-white/10 rounded-2xl"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow">
+                <div class="h-16 bg-white/10 rounded-2xl"></div>
+                <div class="h-16 bg-white/10 rounded-2xl"></div>
+                <div class="h-16 bg-white/10 rounded-2xl"></div>
+                <div class="h-16 bg-white/10 rounded-2xl"></div>
             </div>
         </div>
     </div>
-
-    <!-- Row 2 Skeleton -->
+    
+    <!-- Middle Section: Automation Plan -->
     <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/20 border-2 animate-pulse">
         <div class="mb-8 text-center sm:text-left">
             <div class="h-6 bg-white/10 rounded-full w-48 mb-4 mx-auto sm:mx-0"></div>
@@ -78,12 +78,42 @@
             <div class="h-28 bg-white/10 rounded-2xl w-full"></div>
         </div>
     </div>
+
+    <!-- Bottom Grid: Issues & Scanned Pages (FIXED/ADDED) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
+            <div class="flex items-center gap-3 mb-5 sm:mb-6">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
+            </div>
+            <div class="space-y-4 flex-grow">
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
+            </div>
+        </div>
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
+            <div class="flex items-center justify-between mb-5 sm:mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                    <div class="h-6 sm:h-8 bg-white/10 rounded w-32"></div>
+                </div>
+                <div class="h-6 bg-white/10 rounded-full w-16"></div>
+            </div>
+            <div class="space-y-3 flex-grow">
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Results Section -->
 <div id="results-section" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full opacity-0 transition-opacity duration-700">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-        <!-- Summary Box -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
             <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
                 <div class="p-2 sm:p-3 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner"><i class="fas fa-chart-pie"></i></div>
@@ -91,8 +121,6 @@
             </h3>
             <p id="res-summary" class="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg flex-grow"></p>
         </div>
-        
-        <!-- Detected Features -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
             <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
                 <div class="p-2 sm:p-3 bg-brand-accent/20 rounded-xl text-brand-accent shadow-inner"><i class="fas fa-star"></i></div>
@@ -102,7 +130,6 @@
         </div>
     </div>
 
-    <!-- Automation Strategy Section -->
     <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/50 border-2 relative overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.1)]">
         <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary opacity-15 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
         <div class="relative z-10 mb-8 text-center sm:text-left">
@@ -113,9 +140,7 @@
                 <i class="fas fa-robot text-brand-primary"></i> Automation & Business Plan
             </h3>
         </div>
-        
         <div id="res-automation" class="space-y-6 relative z-10"></div>
-        
         <div class="mt-10 text-center relative z-10">
             <a href="https://neeura.ai/" target="_blank" class="inline-block bg-white text-black hover:bg-gray-200 font-extrabold py-4 px-8 sm:px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 text-sm sm:text-lg w-full sm:w-auto">
                 Discuss Implementation with Neeura.ai <i class="fas fa-arrow-right ml-2"></i>
@@ -123,7 +148,6 @@
         </div>
     </div>
 
-    <!-- Bottlenecks & Page Map -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10">
             <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
@@ -132,7 +156,6 @@
             </h3>
             <ul id="res-issues" class="grid grid-cols-1 gap-4"></ul>
         </div>
-
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
             <div class="flex items-center justify-between mb-5 sm:mb-6">
                 <h3 class="text-lg sm:text-xl lg:text-2xl font-bold flex items-center gap-3 text-white">
@@ -162,8 +185,16 @@
         // Hide Header Stepper Elements
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
-        if (headerStepper) headerStepper.style.display = 'none';
-        if (headerStepperMobile) headerStepperMobile.style.display = 'none';
+        if (headerStepper) {
+            headerStepper.classList.remove('opacity-100', 'translate-y-0');
+            headerStepper.classList.add('opacity-0', 'translate-y-[-10px]');
+            setTimeout(() => headerStepper.style.display = 'none', 500);
+        }
+        if (headerStepperMobile) {
+            headerStepperMobile.classList.remove('opacity-100');
+            headerStepperMobile.classList.add('opacity-0');
+            setTimeout(() => headerStepperMobile.style.display = 'none', 500);
+        }
 
         urlInput.value = '';
         resultsSection.classList.add('hidden');
@@ -188,15 +219,24 @@
             statusMsg.textContent = message;
         }
 
-        // Show header components when updating stepper
-        if (headerStepper) headerStepper.style.display = 'flex';
-        if (headerStepperMobile) headerStepperMobile.style.display = 'flex';
+        // Show header components with fade-in
+        if (headerStepper && headerStepper.style.display === 'none') {
+            headerStepper.style.display = 'flex';
+            void headerStepper.offsetWidth; // Force reflow
+            headerStepper.classList.remove('opacity-0', 'translate-y-[-10px]');
+            headerStepper.classList.add('opacity-100', 'translate-y-0');
+        }
+        if (headerStepperMobile && headerStepperMobile.style.display === 'none') {
+            headerStepperMobile.style.display = 'flex';
+            void headerStepperMobile.offsetWidth;
+            headerStepperMobile.classList.remove('opacity-0');
+            headerStepperMobile.classList.add('opacity-100');
+        }
 
         const steps = ['submit', 'discover', 'scrape', 'analyze', 'complete'];
         const currentIdx = steps.indexOf(step);
         if (currentIdx === -1) return;
 
-        // Update mobile compact status text inside navigation pill
         if (headerStepperMobileText) {
             const labels = {
                 submit: '1/5: Submitting',
@@ -230,59 +270,53 @@
                 el.classList.remove('opacity-30');
                 el.classList.add('opacity-100');
                 if (iconContainer) {
-                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-300";
+                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-500";
                     iconContainer.innerHTML = `<i class="fas fa-check text-[8px]"></i>`;
                 }
-                if (labelEl) {
-                    labelEl.className = "text-brand-accent hidden lg:inline";
-                }
-                if (lineEl) {
-                    lineEl.className = "w-4 h-[1px] bg-brand-accent transition-all duration-300";
-                }
+                if (labelEl) labelEl.className = "text-brand-accent hidden lg:inline transition-colors duration-500";
+                if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-accent transition-colors duration-500";
             } else if (idx === currentIdx) {
-                // Currently Active State
+                // Active State
                 el.classList.remove('opacity-30');
                 el.classList.add('opacity-100');
                 if (iconContainer) {
-                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(14,165,233,0.4)] animate-pulse transition-all duration-300";
+                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(14,165,233,0.4)] animate-pulse transition-all duration-500";
                     iconContainer.innerHTML = `<i class="fas ${config.icon} text-[8px]"></i>`;
                 }
-                if (labelEl) {
-                    labelEl.className = "text-brand-primary hidden lg:inline";
-                }
-                if (lineEl) {
-                    lineEl.className = "w-4 h-[1px] bg-brand-border";
-                }
+                if (labelEl) labelEl.className = "text-brand-primary hidden lg:inline transition-colors duration-500";
+                if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
             } else {
-                // Disabled / Future Step State
+                // Pending State
                 el.classList.add('opacity-30');
                 el.classList.remove('opacity-100');
                 if (iconContainer) {
-                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-300";
+                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500";
                     iconContainer.innerHTML = `<i class="fas ${config.icon} text-[8px]"></i>`;
                 }
-                if (labelEl) {
-                    labelEl.className = "text-gray-400 hidden lg:inline";
-                }
-                if (lineEl) {
-                    lineEl.className = "w-4 h-[1px] bg-brand-border";
-                }
+                if (labelEl) labelEl.className = "text-gray-400 hidden lg:inline transition-colors duration-500";
+                if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
             }
         });
     }
 
-    // Handles processing errors gracefully
     function handleAuditError(errorMsg, suggestion = "Please verify your parameters and try again.") {
         const submitBtn = document.getElementById('submit-btn');
         const skeletonState = document.getElementById('skeleton-state');
         const heroWrapper = document.getElementById('hero-wrapper');
         const bodyStatusContainer = document.getElementById('body-status-container');
         
-        // Hide Header Stepper Elements on crash
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
-        if (headerStepper) headerStepper.style.display = 'none';
-        if (headerStepperMobile) headerStepperMobile.style.display = 'none';
+        if (headerStepper) {
+            headerStepper.classList.remove('opacity-100', 'translate-y-0');
+            headerStepper.classList.add('opacity-0', 'translate-y-[-10px]');
+            setTimeout(() => headerStepper.style.display = 'none', 500);
+        }
+        if (headerStepperMobile) {
+            headerStepperMobile.classList.remove('opacity-100');
+            headerStepperMobile.classList.add('opacity-0');
+            setTimeout(() => headerStepperMobile.style.display = 'none', 500);
+        }
 
         alert(`Deep Audit Failed: ${errorMsg}\n\nSuggestion: ${suggestion}`);
         
@@ -295,7 +329,6 @@
         heroWrapper.classList.remove('hero-hidden');
     }
 
-    // Dynamic audit execution form listener using SSE
     document.getElementById('audit-form').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -317,18 +350,15 @@
         resultsSection.classList.add('hidden');
         resultsSection.classList.remove('opacity-100');
         
-        // Show status containers
         bodyStatusContainer.classList.remove('hidden');
         skeletonState.classList.remove('hidden');
         skeletonState.classList.add('flex');
         freshStartBtn.classList.add('hidden');
         
-        // Trigger initial Submit URL step
         updateStepper('submit', 'Validating endpoint structure and establishing bridge...');
         
         let eventSource;
         try {
-            // Instantiate SSE channel
             eventSource = new EventSource(`/api/audit?url=${encodeURIComponent(url)}`);
             
             eventSource.onmessage = function(event) {
@@ -369,7 +399,6 @@
         }
     });
 
-    // Populate data inside structural results sections
     function renderResults(data) {
         const submitBtn = document.getElementById('submit-btn');
         const skeletonState = document.getElementById('skeleton-state');
@@ -377,14 +406,12 @@
         const bodyStatusContainer = document.getElementById('body-status-container');
         const freshStartBtn = document.getElementById('fresh-start-btn');
         
-        // Update Step 5 highlight momentarily before showing dashboard
         updateStepper('complete', 'Compiling dashboard reports...');
         
+        // Give the user 1.5 seconds to see the final "Ready" step light up green
         setTimeout(() => {
-            // 1. Business Summary
             document.getElementById('res-summary').textContent = data.business_summary;
             
-            // 2. Detected Features Grid
             const featuresContainer = document.getElementById('res-features');
             featuresContainer.innerHTML = data.detected_features.map(f => `
                 <div class="bg-black/40 border border-brand-border rounded-2xl p-4 hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-all group">
@@ -397,7 +424,6 @@
                 </div>
             `).join('');
 
-            // 3. Automation Timelines
             const autoList = document.getElementById('res-automation');
             autoList.innerHTML = data.automation_opportunities.map((a, index) => `
                 <div class="relative pl-8 sm:pl-10 group">
@@ -412,7 +438,6 @@
                 </div>
             `).join('');
             
-            // 4. Bottlenecks List
             const issuesList = document.getElementById('res-issues');
             issuesList.innerHTML = data.issues.map(i => `
                 <li class="bg-black/40 p-4 sm:p-5 rounded-xl border border-brand-border border-l-4 border-l-red-500/60 hover:bg-red-500/5 transition-colors">
@@ -421,7 +446,6 @@
                 </li>
             `).join('');
 
-            // 5. Scanned Page Log Cards
             const pagesList = document.getElementById('res-pages');
             const pagesCountBadge = document.getElementById('res-pages-count');
             
@@ -455,26 +479,37 @@
                 `;
             }).join('');
             
-            // Toggle visibility structures
             skeletonState.classList.add('hidden');
             skeletonState.classList.remove('flex');
             bodyStatusContainer.classList.add('hidden');
             
             resultsSection.classList.remove('hidden');
             resultsSection.classList.add('flex');
+            
+            // Force reflow to guarantee fade-in animation triggers
+            void resultsSection.offsetWidth;
+            resultsSection.classList.add('opacity-100');
+            
             freshStartBtn.classList.remove('hidden');
             
-            // Hide Header Stepper Elements on Completion
+            // Smoothly hide Header Stepper Elements
             const headerStepper = document.getElementById('header-stepper');
             const headerStepperMobile = document.getElementById('header-stepper-mobile');
-            if (headerStepper) headerStepper.style.display = 'none';
-            if (headerStepperMobile) headerStepperMobile.style.display = 'none';
+            if (headerStepper) {
+                headerStepper.classList.remove('opacity-100', 'translate-y-0');
+                headerStepper.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => headerStepper.style.display = 'none', 500);
+            }
+            if (headerStepperMobile) {
+                headerStepperMobile.classList.remove('opacity-100');
+                headerStepperMobile.classList.add('opacity-0');
+                setTimeout(() => headerStepperMobile.style.display = 'none', 500);
+            }
 
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
             
-            setTimeout(() => { resultsSection.classList.add('opacity-100'); }, 50);
-        }, 600);
+        }, 1500); // 1.5s delay to show the final step
     }
 </script>
 {% endblock %}

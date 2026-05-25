@@ -24,7 +24,7 @@
                     },
                     animation: {
                         'gradient-x': 'gradient-x 3s ease infinite',
-                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     },
                     keyframes: {
                         'gradient-x': {
@@ -51,7 +51,6 @@
             background-color: #09090b; 
             color: #fafafa; 
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            /* Grid background overlay */
             background-image: 
                 radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -86,31 +85,27 @@
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(39, 39, 42, 0.8);
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(24, 24, 27, 0.5);
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #3f3f46;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #52525b;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(24, 24, 27, 0.5); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #52525b; }
+        
+        /* Smooth Hero Collapse Animation */
         #hero-wrapper {
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 500px;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             transform-origin: top;
+            overflow: hidden;
+            opacity: 1;
+            transform: scale(1);
         }
         .hero-hidden {
-            opacity: 0;
-            transform: scaleY(0);
-            height: 0;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden;
+            opacity: 0 !important;
+            max-height: 0 !important;
+            transform: scale(0.95) translateY(-20px) !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
         }
     </style>
 </head>
@@ -133,61 +128,61 @@
                 </div>
                 
                 <!-- Center: Compact Real-Time Header Stepper (Desktop) -->
-                <div class="hidden md:flex items-center gap-3 bg-black/50 border border-brand-border/80 rounded-full px-4 py-1.5" id="header-stepper" style="display: none;">
+                <div class="hidden md:flex items-center gap-2 lg:gap-3 bg-black/50 border border-brand-border/80 rounded-full px-4 py-1.5 transition-all duration-500 opacity-0 translate-y-[-10px]" id="header-stepper" style="display: none;">
                     <!-- Step 1: Submit -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold" id="h-step-submit">
-                        <div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-[0_0_8px_rgba(14,165,233,0.4)] transition-all duration-300 text-[10px]">
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold transition-opacity duration-500" id="h-step-submit">
+                        <div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-[0_0_8px_rgba(14,165,233,0.4)] transition-all duration-500 text-[10px]">
                             <i class="fas fa-paper-plane text-[8px]"></i>
                         </div>
-                        <span class="text-brand-primary hidden lg:inline">Submit</span>
+                        <span class="text-brand-primary hidden lg:inline transition-colors duration-500">Submit</span>
                     </div>
-                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-1"></div>
+                    <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-1"></div>
                     
                     <!-- Step 2: Discover -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-discover">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-discover">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-sitemap text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline">Discover</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Discover</span>
                     </div>
-                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-2"></div>
+                    <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-2"></div>
                     
                     <!-- Step 3: Scrape -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-scrape">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-scrape">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-file-alt text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline">Scrape</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Scrape</span>
                     </div>
-                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-3"></div>
+                    <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-3"></div>
                     
                     <!-- Step 4: Analyze -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-analyze">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-analyze">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-robot text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline">Analyze</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Analyze</span>
                     </div>
-                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-4"></div>
+                    <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-4"></div>
                     
                     <!-- Step 5: Ready -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-ready">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-ready">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-flag-checkered text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline">Ready</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Ready</span>
                     </div>
                 </div>
 
                 <!-- Center: Compact Dynamic Mobile Status Pill -->
-                <div class="flex md:hidden items-center bg-brand-primary/10 border border-brand-primary/30 rounded-full px-3 py-1 text-[11px] font-mono font-bold text-brand-primary gap-1.5 animate-pulse" id="header-stepper-mobile" style="display: none;">
+                <div class="flex md:hidden items-center bg-brand-primary/10 border border-brand-primary/30 rounded-full px-3 py-1 text-[11px] font-mono font-bold text-brand-primary gap-1.5 animate-pulse transition-all duration-500 opacity-0" id="header-stepper-mobile" style="display: none;">
                     <i class="fas fa-spinner fa-spin text-[10px]"></i>
                     <span id="header-stepper-mobile-text">Step 1/5</span>
                 </div>
                 
                 <!-- Right Fresh Start control -->
                 <div>
-                    <button id="fresh-start-btn" onclick="if(window.resetAudit) window.resetAudit()" class="hidden bg-brand-primary/10 border border-brand-primary/50 text-brand-primary hover:bg-brand-primary hover:text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(14,165,233,0.15)] flex items-center gap-2">
+                    <button id="fresh-start-btn" onclick="if(window.resetAudit) window.resetAudit()" class="hidden bg-brand-primary/10 border border-brand-primary/50 text-brand-primary hover:bg-brand-primary hover:text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(14,165,233,0.15)] flex items-center gap-2 animate-fade-in-up">
                         <i class="fas fa-redo-alt"></i> <span class="hidden sm:inline">Fresh Start</span>
                     </button>
                 </div>
@@ -204,7 +199,6 @@
     <footer class="border-t border-brand-border bg-brand-bg/90 backdrop-blur-xl mt-20">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8">
-                
                 <div class="flex flex-col items-center md:items-start text-center md:text-left">
                     <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity mb-4">
                         <div class="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
@@ -218,7 +212,6 @@
                         Advanced AI-driven website analysis and automation planning. Discover bottlenecks and scale your operations instantly.
                     </p>
                 </div>
-                
                 <div class="flex flex-col items-center md:items-start text-center md:text-left">
                     <h4 class="text-white font-bold mb-5 text-lg tracking-wide">Resources</h4>
                     <ul class="space-y-3 text-sm text-gray-400">
@@ -227,40 +220,23 @@
                         <li><a href="#" class="hover:text-brand-primary transition-colors">Privacy Policy</a></li>
                     </ul>
                 </div>
-
                 <div class="flex flex-col items-center md:items-start text-center md:text-left">
                     <h4 class="text-white font-bold mb-5 text-lg tracking-wide">Developer</h4>
                     <p class="text-gray-400 text-sm mb-4">
                         Developed by <span class="font-bold text-white">Maaz Waheed</span>
                     </p>
-                    
                     <div class="flex gap-5 text-gray-400 text-xl">
-                        <a href="https://www.facebook.com/profile.php?id=61550243033527" target="_blank" class="hover:text-[#1877F2] transition-colors hover:scale-110 transform duration-200" title="Facebook">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="https://x.com/wwork4287" target="_blank" class="hover:text-white transition-colors hover:scale-110 transform duration-200" title="X (Twitter)">
-                            <i class="fa-brands fa-twitter"></i>
-                        </a>
-                        <a href="https://instagram.com/maa.zwaheed" target="_blank" class="hover:text-[#E4405F] transition-colors hover:scale-110 transform duration-200" title="Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="https://github.com/42Wor" target="_blank" class="hover:text-white transition-colors hover:scale-110 transform duration-200" title="GitHub">
-                            <i class="fab fa-github"></i>
-                        </a>
+                        <a href="https://www.facebook.com/profile.php?id=61550243033527" target="_blank" class="hover:text-[#1877F2] transition-colors hover:scale-110 transform duration-200" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://x.com/wwork4287" target="_blank" class="hover:text-white transition-colors hover:scale-110 transform duration-200" title="X (Twitter)"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="https://instagram.com/maa.zwaheed" target="_blank" class="hover:text-[#E4405F] transition-colors hover:scale-110 transform duration-200" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://github.com/42Wor" target="_blank" class="hover:text-white transition-colors hover:scale-110 transform duration-200" title="GitHub"><i class="fab fa-github"></i></a>
                     </div>
                 </div>
-                
             </div>
-            
             <div class="mt-12 pt-8 border-t border-brand-border flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-gray-500 text-sm">
-                    &copy; 2026 DeepAudit. All rights reserved.
-                </p>
+                <p class="text-gray-500 text-sm">&copy; 2026 DeepAudit. All rights reserved.</p>
                 <p class="text-gray-500 text-sm flex items-center gap-2">
-                    Powered by 
-                    <a href="https://neeura.ai" target="_blank" class="text-brand-primary font-bold hover:underline tracking-tight flex items-center gap-1">
-                        NEEURA.AI
-                    </a>
+                    Powered by <a href="https://neeura.ai" target="_blank" class="text-brand-primary font-bold hover:underline tracking-tight flex items-center gap-1">NEEURA.AI</a>
                 </p>
             </div>
         </div>
