@@ -1,96 +1,172 @@
+import time
 import re
 import xml.etree.ElementTree as ET
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlunparse
 import httpx
-from bs4 import BeautifulSoup
+from lxml import html
 
-EXCLUSION_KEYWORDS = [
-    "login", "signin", "signup", "register", "auth", "admin", "dashboard",
-    "cart", "checkout", "my-account", "account", "settings", "profile",
-    "privacy-policy", "terms-of-service", "terms-and-conditions", "wp-admin",
-    "logout", "reset-password"
-]
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
 
 EXCLUDED_EXTENSIONS = (
-    '.pdf', '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.zip', 
-    '.tar', '.gz', '.mp4', '.mp3', '.css', '.js', '.json', '.xml'
+    '.pdf', '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp',
+    '.css', '.js', '.json', '.xml', '.csv', '.zip', '.mp4'
 )
 
-def is_public_url(url: str, base_domain: str) -> bool:
-    parsed = urlparse(url)
-    if parsed.netloc != base_domain:
-        return False
-    if parsed.path.lower().endswith(EXCLUDED_EXTENSIONS):
-        return False
-    normalized_url = url.lower()
-    for keyword in EXCLUSION_KEYWORDS:
-        if keyword in normalized_url:
-            return False
-    return True
+USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0)'
 
-def get_links_from_sitemap(base_url: str, http_client: httpx.Client) -> list:
-    """Helper to read public links directly from sitemap.xml if it exists."""
-    parsed_base = urlparse(base_url)
-    sitemap_url = f"{parsed_base.scheme}://{parsed_base.netloc}/sitemap.xml"
+# ---------------------------------------------------------------------------
+# URL Utilities
+# ---------------------------------------------------------------------------
+
+def normalize_url(url: str) -> str:
+    """Normalize URL by removing fragments and standardizing format."""
+    parsed = list(urlparse(url))
+    parsed[5] = ''  # Remove fragment (#)
+    return urlunparse(parsed).rstrip('/')
+
+def is_valid_public_url(url: str, base_domain: str) -> bool:
+    """Check if URL belongs to the same domain and is a valid web page."""
     try:
-        response = http_client.get(sitemap_url, timeout=5.0)
-        if response.status_code == 200:
-            root = ET.fromstring(response.content)
-            urls = []
-            for elem in root.iter():
-                if elem.tag.endswith('loc'):
-                    url = elem.text.strip()
-                    if is_public_url(url, parsed_base.netloc):
-                        urls.append(url)
-            return urls
-    except Exception as e:
-        print(f"Sitemap check skipped: {e}")
-    return []
+        parsed = urlparse(url)
+        if parsed.netloc != base_domain:
+            return False
+        if parsed.scheme not in ('http', 'https'):
+            return False
+        if parsed.path.lower().endswith(EXCLUDED_EXTENSIONS):
+            return False
+        return True
+    except Exception:
+        return False
 
-def discover_public_links(start_url: str, max_discovery: int = 10) -> list:
-    """Finds up to `max_discovery` public links, falling back to a recursive crawl."""
-    domain = urlparse(start_url).netloc
+# ---------------------------------------------------------------------------
+# Hybrid Crawler Methods
+# ---------------------------------------------------------------------------
+
+def get_sitemap_links(base_url: str, base_domain: str, max_links: int) -> list:
+    """Attempt to fetch and parse sitemap.xml for URLs."""
+    sitemap_url = urljoin(base_url, '/sitemap.xml')
+    urls = []
     
-    with httpx.Client(follow_redirects=True, timeout=10.0) as http_client:
-        discovered = get_links_from_sitemap(start_url, http_client)
-        if discovered:
-            return discovered[:max_discovery]
+    try:
+        with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
+            response = client.get(sitemap_url)
+            
+            if response.status_code == 200:
+                # Parse XML
+                root = ET.fromstring(response.content)
+                
+                # Handle standard sitemap namespaces
+                namespaces = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+                
+                # Find all <loc> tags
+                locs = root.findall('.//sm:loc', namespaces)
+                if not locs:
+                    # Fallback if namespace is missing
+                    locs = root.findall('.//loc')
+                
+                for loc in locs:
+                    if loc.text:
+                        clean_url = normalize_url(loc.text.strip())
+                        if is_valid_public_url(clean_url, base_domain):
+                            urls.append(clean_url)
+                            if len(urls) >= max_links:
+                                break
+                                
+    except Exception as e:
+        print(f"   [Sitemap] Failed or not found: {e}")
         
-        to_visit = [start_url]
-        visited = set()
-        
-        while to_visit and len(visited) < max_discovery:
-            current_url = to_visit.pop(0)
+    return urls
+
+def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> list:
+    """Fallback crawler using lxml (No BeautifulSoup) to find links."""
+    visited = set()
+    queue = [start_url]
+    discovered_urls = []
+    
+    with httpx.Client(timeout=8.0, follow_redirects=True, headers={'User-Agent': USER_AGENT}) as client:
+        while queue and len(discovered_urls) < max_links:
+            current_url = queue.pop(0)
+            
             if current_url in visited:
                 continue
+                
+            visited.add(current_url)
+            
             try:
-                response = http_client.get(current_url)
-                if response.status_code != 200:
+                response = client.get(current_url)
+                if response.status_code != 200 or 'text/html' not in response.headers.get('content-type', ''):
                     continue
                 
-                visited.add(current_url)
-                soup = BeautifulSoup(response.text, 'html.parser')
+                discovered_urls.append(current_url)
                 
-                for link in soup.find_all('a', href=True):
-                    full_url = urljoin(start_url, link['href'])
-                    if is_public_url(full_url, domain) and full_url not in visited and full_url not in to_visit:
-                        to_visit.append(full_url)
-            except Exception:
+                # Parse HTML using lxml instead of BeautifulSoup
+                tree = html.fromstring(response.content)
+                tree.make_links_absolute(current_url)
+                
+                # Extract all href attributes using XPath
+                for link in tree.xpath('//a/@href'):
+                    clean_link = normalize_url(link)
+                    if is_valid_public_url(clean_link, base_domain) and clean_link not in visited:
+                        queue.append(clean_link)
+                        
+            except Exception as e:
+                print(f"   [Crawler] Error fetching {current_url}: {e}")
                 continue
-        return list(visited)
+                
+    return discovered_urls
 
-def scrape_page(url: str, http_client: httpx.Client) -> str:
-    """Downloads page and extracts clean, non-markup text."""
-    try:
-        response = http_client.get(url, timeout=8.0)
-        if response.status_code != 200:
-            return ""
-        soup = BeautifulSoup(response.text, 'html.parser')
+def discover_public_links(start_url: str, max_discovery: int = 6) -> list:
+    """
+    Hybrid approach: 
+    1. Try Sitemap.xml
+    2. If no links found, fallback to lxml BFS crawler
+    """
+    base_domain = urlparse(start_url).netloc
+    
+    print("   [Crawler] Attempting to read sitemap.xml...")
+    urls = get_sitemap_links(start_url, base_domain, max_discovery)
+    
+    if urls:
+        print(f"   [Crawler] Success! Found {len(urls)} links via Sitemap.")
+        return urls
         
-        for elem in soup(["script", "style", "nav", "footer", "header", "aside", "form"]):
-            elem.extract()
+    print("   [Crawler] Sitemap failed or empty. Falling back to lxml BFS crawler...")
+    urls = fallback_bfs_crawl(start_url, base_domain, max_discovery)
+    
+    return urls
+
+# ---------------------------------------------------------------------------
+# Page Scraper (Using lxml)
+# ---------------------------------------------------------------------------
+
+def scrape_page(url: str) -> str:
+    """Download page and extract clean text content using lxml."""
+    try:
+        with httpx.Client(timeout=8.0, follow_redirects=True, headers={'User-Agent': USER_AGENT}) as client:
+            response = client.get(url)
+            if response.status_code != 200:
+                return ""
             
-        cleaned_text = re.sub(r'\s+', ' ', soup.get_text()).strip()
-        return cleaned_text[:2500]  # Cap character limit to preserve context window
-    except Exception:
+            # Parse HTML with lxml
+            tree = html.fromstring(response.content)
+            
+            # Remove non-content elements using XPath
+            tags_to_remove = ['script', 'style', 'nav', 'footer', 'header', 'aside', 'noscript', 'svg']
+            for tag in tags_to_remove:
+                for element in tree.xpath(f'//{tag}'):
+                    element.drop_tree()
+            
+            # Extract raw text
+            text = tree.text_content()
+            
+            # Clean up whitespace (remove extra newlines and spaces)
+            text = re.sub(r'\s+', ' ', text).strip()
+            
+            # Limit content length to preserve memory/tokens
+            return text[:3000]
+            
+    except Exception as e:
+        print(f"   [Scraper] Error scraping {url}: {e}")
         return ""

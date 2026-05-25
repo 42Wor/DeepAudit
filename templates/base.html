@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Deep Audit - AI Automation Auditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 for the new X logo -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#09090b',
+                            card: '#18181b',
+                            primary: '#0ea5e9', // Sky blue
+                            secondary: '#8b5cf6', // Violet
+                            accent: '#10b981', // Emerald
+                            border: '#27272a'
+                        }
+                    },
+                    animation: {
+                        'gradient-x': 'gradient-x 3s ease infinite',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #09090b; 
+            color: #fafafa; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            /* High-tech grid background for wide screens */
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            background-position: top center;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #0ea5e9, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+        }
+        .glass-card {
+            background: rgba(24, 24, 27, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(39, 39, 42, 0.8);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+        .glass-nav {
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.8);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(24, 24, 27, 0.5);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+        /* Smooth transition for hiding hero */
+        #hero-wrapper {
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: top;
+        }
+        .hero-hidden {
+            opacity: 0;
+            transform: scaleY(0);
+            height: 0;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Simple Header -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-nav w-full">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Fake Logo -->
+                <div class="flex-shrink-0">
+                    <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
+                            <i class="fas fa-layer-group text-brand-primary text-lg sm:text-xl"></i>
+                        </div>
+                        <span class="text-xl sm:text-2xl font-black tracking-tighter text-white">
+                            DEEP<span class="text-brand-primary">AUDIT</span>
+                        </span>
+                    </a>
+                </div>
+                
+                <!-- Fresh Start Button (Hidden by default) -->
+                <div>
+                    <button id="fresh-start-btn" onclick="if(window.resetAudit) window.resetAudit()" class="hidden bg-brand-primary/10 border border-brand-primary/50 text-brand-primary hover:bg-brand-primary hover:text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(14,165,233,0.15)] flex items-center gap-2">
+                        <i class="fas fa-redo-alt"></i> <span class="hidden sm:inline">Fresh Start</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Block -->
+    <main class="flex-grow w-full max-w-[1600px] mx-auto transition-all duration-500 pt-24 sm:pt-32 px-4 sm:px-6 md:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Professional Footer -->
+    <footer class="border-t border-brand-border bg-brand-bg/90 backdrop-blur-xl mt-20">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8">
+                
+                <!-- Column 1: Brand Info -->
+                <div class="flex flex-col items-center md:items-start text-center md:text-left">
+                    <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity mb-4">
+                        <div class="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
+                            <i class="fas fa-layer-group text-brand-primary text-sm"></i>
+                        </div>
+                        <span class="text-xl font-black tracking-tighter text-white">
+                            DEEP<span class="text-brand-primary">AUDIT</span>
+                        </span>
+                    </a>
+                    <p class="text-gray-400 text-sm leading-relaxed max-w-xs">
+                        Advanced AI-driven website analysis and automation planning. Discover bottlenecks and scale your operations instantly.
+                    </p>
+                </div>
+                
+                <!-- Column 2: Resources & Links -->
+                <div class="flex flex-col items-center md:items-start text-center md:text-left">
+                    <h4 class="text-white font-bold mb-5 text-lg tracking-wide">Resources</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-brand-primary transition-colors">Documentation</a></li>
+                        <li><a href="#" class="hover:text-brand-primary transition-colors">API Reference</a></li>
+                        <li><a href="#" class="hover:text-brand-primary transition-colors">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Developer & Socials -->
+                <div class="flex flex-col items-center md:items-start text-center md:text-left">
+                    <h4 class="text-white font-bold mb-5 text-lg tracking-wide">Developer</h4>
+                    <p class="text-gray-400 text-sm mb-4">
+                        Developed by <span class="font-bold text-white">Maaz Waheed</span>
+                    </p>
+                    
+                    <!-- Social Media Icons -->
+                    <div class="flex gap-5 text-gray-400 text-xl">
+                        <a href="https://www.facebook.com/profile.php?id=61550243033527" target="_blank" class="hover:text-[#1877F2] transition-colors hover:scale-110 transform duration-200" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://x.com/wwork4287" target="_blank" class="hover:text-white transition-colors hover:scale-110 transform duration-200" title="X (Twitter)">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="https://instagram.com/maa.zwaheed" target="_blank" class="hover:text-[#E4405F] transition-colors hover:scale-110 transform duration-200" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://github.com/42Wor" target="_blank" class="hover:text-white transition-colors hover:scale-110 transform duration-200" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Bottom Bar -->
+            <div class="mt-12 pt-8 border-t border-brand-border flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-500 text-sm">
+                    &copy; 2026 DeepAudit. All rights reserved.
+                </p>
+                <p class="text-gray-500 text-sm flex items-center gap-2">
+                    Powered by 
+                    <a href="https://neeura.ai" target="_blank" class="text-brand-primary font-bold hover:underline tracking-tight flex items-center gap-1">
+                        NEEURA.AI
+                    </a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts Block -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

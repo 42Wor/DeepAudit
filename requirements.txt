@@ -1,4 +1,7 @@
-flask
-httpx
-beautifulsoup4
-openai
+flask==3.0.0
+httpx==0.25.2
+beautifulsoup4==4.12.2
+google-genai==0.3.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+lxml==4.9.3

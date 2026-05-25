@@ -1,0 +1,1089 @@
+
+====================
+FILE PATH: .python-version
+====================
+
+3.11.9
+
+
+====================
+FILE PATH: ai.py
+====================
+
+import os
+import json
+from typing import Dict, Any
+from google import genai
+from google.genai import types
+from pydantic import BaseModel, Field
+
+# ---------------------------------------------------------------------------
+# Structured Output Schema
+# ---------------------------------------------------------------------------
+
+class AuditReportSchema(BaseModel):
+    business_summary: str = Field(
+        description="2-3 sentence summary of what this business/website does based on content"
+    )
+    detected_features: list[str] = Field(
+        description="List of key features, services, or products identified on the site"
+    )
+    issues: list[Dict[str, str]] = Field(
+        description="List of problems found, each with 'type' (SEO/Accessibility/UX/Content) and 'description'"
+    )
+    automation_opportunities: list[Dict[str, str]] = Field(
+        description="AI automation opportunities, each with 'opportunity' and 'impact' fields"
+    )
+
+# ---------------------------------------------------------------------------
+# AI Audit Function
+# ---------------------------------------------------------------------------
+
+def run_ai_audit(url: str, combined_text: str) -> dict:
+    """
+    Send scraped content to Gemini for structured audit analysis.
+    Returns a dictionary with business summary, features, issues, and automation ideas.
+    """
+    # Initialize Gemini client
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    
+    # Truncate text if too long (Gemini has context limits)
+    max_chars = 15000
+    if len(combined_text) > max_chars:
+        combined_text = combined_text[:max_chars] + "\n[Content truncated for analysis]"
+    
+    prompt = f"""
+You are an expert web auditor and AI automation consultant. Analyze the scraped content from {url} and provide a comprehensive audit.
+
+SCRAPED CONTENT:
+{combined_text}
+
+Provide a structured analysis covering:
+1. What the business does (2-3 sentences)
+2. Key features, services, or products detected
+3. Issues found (SEO, accessibility, UX, content quality)
+4. AI automation opportunities that could improve this business
+
+Focus on practical, actionable insights. Be specific and avoid generic recommendations.
+"""
+    
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.3,
+                response_mime_type="application/json",
+                response_schema=AuditReportSchema,
+            )
+        )
+        
+        # Parse the JSON response
+        result = json.loads(response.text)
+        return result
+        
+    except Exception as e:
+        print(f"Gemini API error: {e}")
+        # Return graceful fallback
+        return {
+            "business_summary": f"Unable to analyze {url}. The site may be unavailable or require JavaScript rendering.",
+            "detected_features": ["Could not detect features due to analysis error"],
+            "issues": [{
+                "type": "Analysis Error",
+                "description": f"AI analysis failed: {str(e)}. Check server logs and API key configuration."
+            }],
+            "automation_opportunities": [{
+                "opportunity": "Manual Review Required",
+                "impact": "The site needs manual inspection as automated analysis was unsuccessful."
+            }]
+        }
+
+====================
+FILE PATH: app.py
+====================
+
+import os
+import sys
+from flask import Flask, render_template, request, jsonify
+import httpx
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Import local modules
+from crawler import discover_public_links, scrape_page
+from ai import run_ai_audit
+
+# ---------------------------------------------------------------------------
+# App Configuration
+# ---------------------------------------------------------------------------
+
+app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
+
+# Check for required API key
+if not os.getenv("GEMINI_API_KEY"):
+    print("⚠️  WARNING: GEMINI_API_KEY not found in environment variables")
+    print("   Create a .env file with: GEMINI_API_KEY=your_key_here")
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
+@app.route("/")
+def index():
+    """Serve the main auditor interface."""
+    return render_template("index.html")
+
+@app.route("/api/audit", methods=["POST"])
+def run_audit():
+    """
+    Main audit endpoint.
+    1. Validates input URL
+    2. Discovers public pages
+    3. Scrapes content
+    4. Runs AI analysis
+    5. Returns structured audit report
+    """
+    try:
+        # Parse request
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body must be JSON"}), 400
+        
+        url = data.get("url", "").strip()
+        if not url:
+            return jsonify({"error": "URL parameter is required"}), 400
+        
+        # Normalize URL
+        if not url.startswith(("http://", "https://")):
+            url = "https://" + url
+        
+        print(f"\n🔍 Starting audit for: {url}")
+        
+        # Step 1: Discover public pages
+        print("📋 Discovering public pages...")
+        public_urls = discover_public_links(url, max_discovery=8)
+        
+        if not public_urls:
+            return jsonify({
+                "error": "No public pages discovered",
+                "suggestion": "The site may block crawlers or have no indexable content"
+            }), 400
+        
+        print(f"   Found {len(public_urls)} public pages")
+        
+        # Step 2: Scrape content from discovered pages
+        print("📄 Scraping page content...")
+        scraped_data_list = []
+        
+        with httpx.Client(
+            follow_redirects=True, 
+            timeout=10.0,
+            headers={'User-Agent': 'Mozilla/5.0 (compatible; NeeuraAuditor/1.0)'}
+        ) as http_client:
+            for i, page_url in enumerate(public_urls, 1):
+                print(f"   [{i}/{len(public_urls)}] Scraping: {page_url}")
+                text = scrape_page(page_url, http_client)
+                if text:
+                    scraped_data_list.append(f"PAGE: {page_url}\nCONTENT: {text}\n---")
+        
+        if not scraped_data_list:
+            return jsonify({
+                "error": "Failed to extract content from any page",
+                "suggestion": "The site may rely heavily on JavaScript"
+            }), 400
+        
+        combined_text = "\n".join(scraped_data_list)
+        print(f"   Extracted {len(combined_text)} characters total")
+        
+        # Step 3: Run AI analysis
+        print("🤖 Running AI analysis...")
+        try:
+            audit_report = run_ai_audit(url, combined_text)
+        except Exception as e:
+            print(f"   AI analysis failed: {e}")
+            return jsonify({
+                "error": f"AI analysis failed: {str(e)}",
+                "suggestion": "Check GEMINI_API_KEY and API quota"
+            }), 500
+        
+        # Add scanned pages to response
+        audit_report["scanned_pages"] = public_urls
+        
+        print("✅ Audit complete!")
+        return jsonify(audit_report)
+        
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return jsonify({
+            "error": f"Server error: {str(e)}",
+            "suggestion": "Check server logs for details"
+        }), 500
+
+@app.route("/health")
+def health_check():
+    """Health check endpoint."""
+    return jsonify({
+        "status": "healthy",
+        "gemini_api": "configured" if os.getenv("GEMINI_API_KEY") else "missing"
+    })
+
+# ---------------------------------------------------------------------------
+# Error Handlers
+# ---------------------------------------------------------------------------
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Resource not found"}), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
+    debug = os.getenv("FLASK_DEBUG", "False").lower() == "true"
+    
+    print(f"""
+╔══════════════════════════════════════════╗
+║     Neeura AI Website Auditor           ║
+║     Starting server on port {port}        ║
+╚══════════════════════════════════════════╝
+    """)
+    
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=debug
+    )
+
+====================
+FILE PATH: crawler.py
+====================
+
+import re
+import time
+import xml.etree.ElementTree as ET
+from typing import List, Optional, Set
+from urllib.parse import urljoin, urlparse, urlunparse
+
+import httpx
+from bs4 import BeautifulSoup
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+EXCLUSION_KEYWORDS = [
+    "login", "signin", "signup", "register", "auth", "admin", "dashboard",
+    "cart", "checkout", "my-account", "account", "settings", "profile",
+    "privacy-policy", "terms-of-service", "terms-and-conditions", "wp-admin",
+    "logout", "reset-password", "billing", "payment", "subscribe",
+    "unsubscribe", "verify", "confirmation", "password-reset", "forgot-password",
+    "api", "graphql", "rest", "webhook", "callback", "oauth"
+]
+
+EXCLUDED_EXTENSIONS = (
+    '.pdf', '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.bmp',
+    '.ico', '.zip', '.tar', '.gz', '.rar', '.7z', '.mp4', '.mp3',
+    '.avi', '.mov', '.wmv', '.flv', '.css', '.js', '.json', '.xml',
+    '.csv', '.xls', '.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.txt',
+    '.ttf', '.woff', '.woff2', '.eot'
+)
+
+USER_AGENT = 'Mozilla/5.0 (compatible; NeeuraAuditor/1.0; +https://neeura.ai/bot)'
+
+# ---------------------------------------------------------------------------
+# URL Utilities
+# ---------------------------------------------------------------------------
+
+def normalize_url(url: str) -> str:
+    """Normalize URL by removing fragments and standardizing format."""
+    parsed = list(urlparse(url))
+    parsed[5] = ''  # Remove fragment
+    path = parsed[2].rstrip('/')
+    if not path:
+        path = '/'
+    parsed[2] = path
+    parsed[0] = parsed[0].lower()
+    parsed[1] = parsed[1].lower()
+    return urlunparse(parsed).rstrip('/')
+
+def is_public_url(url: str, base_domain: str) -> bool:
+    """Check if URL is public and should be crawled."""
+    try:
+        parsed = urlparse(url)
+        
+        # Same domain check
+        if parsed.netloc != base_domain:
+            return False
+        
+        # Skip non-http(s) protocols
+        if parsed.scheme not in ('http', 'https'):
+            return False
+        
+        # Check file extensions
+        if parsed.path.lower().endswith(EXCLUDED_EXTENSIONS):
+            return False
+        
+        # Check exclusion keywords
+        normalized_url = url.lower()
+        for keyword in EXCLUSION_KEYWORDS:
+            if keyword in normalized_url:
+                return False
+        
+        # Skip URLs with too many query parameters
+        if len(parsed.query.split('&')) > 5:
+            return False
+        
+        return True
+    except Exception:
+        return False
+
+# ---------------------------------------------------------------------------
+# Sitemap Parser
+# ---------------------------------------------------------------------------
+
+def get_links_from_sitemap(base_url: str, http_client: httpx.Client) -> List[str]:
+    """Extract public links from sitemap.xml if available."""
+    parsed_base = urlparse(base_url)
+    sitemap_url = f"{parsed_base.scheme}://{parsed_base.netloc}/sitemap.xml"
+    
+    try:
+        response = http_client.get(sitemap_url, timeout=5.0)
+        if response.status_code != 200:
+            return []
+        
+        try:
+            root = ET.fromstring(response.content)
+            urls = []
+            
+            # Handle sitemap index
+            ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+            sitemap_locs = root.findall('.//sm:sitemap/sm:loc', ns)
+            
+            if sitemap_locs:
+                # Process first 3 child sitemaps
+                for sitemap_loc in sitemap_locs[:3]:
+                    try:
+                        child_response = http_client.get(sitemap_loc.text.strip(), timeout=5.0)
+                        if child_response.status_code == 200:
+                            child_root = ET.fromstring(child_response.content)
+                            url_locs = child_root.findall('.//sm:url/sm:loc', ns)
+                            for loc in url_locs[:10]:  # Limit per child sitemap
+                                url = loc.text.strip()
+                                normalized = normalize_url(url)
+                                if is_public_url(normalized, parsed_base.netloc):
+                                    urls.append(normalized)
+                    except Exception:
+                        continue
+            else:
+                # Regular sitemap
+                url_locs = root.findall('.//sm:url/sm:loc', ns)
+                for loc in url_locs[:15]:
+                    url = loc.text.strip()
+                    normalized = normalize_url(url)
+                    if is_public_url(normalized, parsed_base.netloc):
+                        urls.append(normalized)
+            
+            return list(dict.fromkeys(urls))  # Remove duplicates while preserving order
+            
+        except ET.ParseError:
+            # Try text-based sitemap
+            url_pattern = re.compile(r'https?://[^\s<>"]+')
+            found_urls = url_pattern.findall(response.text)
+            return [
+                normalize_url(u) for u in found_urls 
+                if is_public_url(normalize_url(u), parsed_base.netloc)
+            ][:15]
+            
+    except Exception as e:
+        print(f"Sitemap check skipped: {e}")
+    
+    return []
+
+# ---------------------------------------------------------------------------
+# Page Discovery (BFS Crawler)
+# ---------------------------------------------------------------------------
+
+def discover_public_links(start_url: str, max_discovery: int = 8) -> List[str]:
+    """
+    Find public links starting from a URL.
+    Uses sitemap if available, otherwise falls back to BFS crawl.
+    """
+    domain = urlparse(start_url).netloc
+    
+    with httpx.Client(
+        follow_redirects=True, 
+        timeout=10.0,
+        headers={'User-Agent': USER_AGENT}
+    ) as http_client:
+        # Try sitemap first
+        discovered = get_links_from_sitemap(start_url, http_client)
+        if discovered:
+            return discovered[:max_discovery]
+        
+        # BFS crawl fallback
+        to_visit = [(start_url, 0)]  # (url, depth)
+        visited = set()
+        
+        while to_visit and len(visited) < max_discovery:
+            current_url, depth = to_visit.pop(0)
+            
+            # Skip if already visited or max depth reached
+            if current_url in visited or depth > 2:
+                continue
+            
+            try:
+                response = http_client.get(current_url)
+                if response.status_code != 200:
+                    continue
+                
+                visited.add(current_url)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                # Extract links
+                for link in soup.find_all('a', href=True):
+                    href = link['href'].strip()
+                    if not href or href.startswith(('#', 'javascript:', 'mailto:', 'tel:')):
+                        continue
+                    
+                    full_url = urljoin(start_url, href)
+                    normalized = normalize_url(full_url)
+                    
+                    if (is_public_url(normalized, domain) and 
+                        normalized not in visited and 
+                        normalized not in [u for u, _ in to_visit]):
+                        to_visit.append((normalized, depth + 1))
+                
+                # Rate limiting
+                time.sleep(0.5)
+                
+            except Exception as e:
+                print(f"Error crawling {current_url}: {e}")
+                continue
+        
+        return list(visited)
+
+# ---------------------------------------------------------------------------
+# Page Scraper
+# ---------------------------------------------------------------------------
+
+def scrape_page(url: str, http_client: httpx.Client) -> str:
+    """Download page and extract clean text content."""
+    try:
+        response = http_client.get(url, timeout=8.0)
+        if response.status_code != 200:
+            return ""
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Remove non-content elements
+        elements_to_remove = [
+            "script", "style", "nav", "footer", "header", "aside",
+            "form", "iframe", "noscript", "svg", "canvas"
+        ]
+        for tag in elements_to_remove:
+            for elem in soup.find_all(tag):
+                elem.decompose()
+        
+        # Get text content
+        text = soup.get_text(separator=' ', strip=True)
+        
+        # Clean up whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        # Limit content length (preserves most important context)
+        return text[:3000]
+        
+    except Exception as e:
+        print(f"Error scraping {url}: {e}")
+        return ""
+
+====================
+FILE PATH: LICENSE
+====================
+
+
+
+====================
+FILE PATH: README.md
+====================
+
+
+
+====================
+FILE PATH: requirements.txt
+====================
+
+flask==3.0.0
+httpx==0.25.2
+beautifulsoup4==4.12.2
+google-genai==0.3.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+lxml==4.9.3
+
+====================
+FILE PATH: templates/index.html
+====================
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neeura AI - Website Auditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1a1d2e',
+                            950: '#0a0b14',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0b14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a5568;
+        }
+
+        /* Gradient text animation */
+        .gradient-text {
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Loading dots animation */
+        .loading-dots span {
+            animation: blink 1.4s infinite both;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+
+        /* Toast notification */
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Main Content -->
+    <div class="flex-grow">
+        <div class="max-w-5xl mx-auto px-4 py-8 sm:py-12 w-full">
+            
+            <!-- Header -->
+            <header class="text-center mb-8 sm:mb-12 animate-fade-in">
+                <div class="inline-block mb-4">
+                    <span class="text-5xl sm:text-6xl">🔍</span>
+                </div>
+                <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500 bg-clip-text text-transparent gradient-text">
+                    Neeura AI Auditor
+                </h1>
+                <p class="text-gray-400 mt-3 text-lg max-w-2xl mx-auto">
+                    Discover public pages, analyze conversion opportunities, and uncover AI automation potential
+                </p>
+            </header>
+
+            <!-- Input Section -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-2xl mb-8 card-hover">
+                <form id="auditForm" onsubmit="startAudit(event)" class="space-y-4">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-grow relative">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                🌐
+                            </span>
+                            <input 
+                                id="urlInput" 
+                                type="url" 
+                                placeholder="Enter website URL (e.g., example.com)" 
+                                required
+                                pattern="^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"
+                                title="Please enter a valid website URL"
+                                class="w-full bg-gray-950 border border-gray-700 rounded-xl pl-10 pr-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-200"
+                            >
+                        </div>
+                        <button 
+                            id="auditBtn" 
+                            type="submit"
+                            class="bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-bold px-8 py-4 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                        >
+                            <span>🔍</span>
+                            <span>Scan Domain</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick URL examples -->
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="text-gray-500">Try:</span>
+                        <button type="button" onclick="setExampleUrl('stripe.com')" class="text-teal-400 hover:text-teal-300 transition">stripe.com</button>
+                        <span class="text-gray-600">•</span>
+                        <button type="button" onclick="setExampleUrl('shopify.com')" class="text-teal-400 hover:text-teal-300 transition">shopify.com</button>
+                        <span class="text-gray-600">•</span>
+                        <button type="button" onclick="setExampleUrl('github.com')" class="text-teal-400 hover:text-teal-300 transition">github.com</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingSection" class="hidden">
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-xl">
+                    <div class="flex flex-col items-center space-y-4">
+                        <div class="relative">
+                            <div class="w-16 h-16 border-4 border-gray-800 border-t-teal-500 rounded-full animate-spin"></div>
+                            <span class="absolute inset-0 flex items-center justify-center text-2xl">🤖</span>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-teal-400 font-semibold text-lg">Analyzing Website</p>
+                            <p class="text-gray-500 text-sm mt-1 loading-dots">
+                                Mapping domain structure<span>.</span><span>.</span><span>.</span>
+                            </p>
+                        </div>
+                        <div class="w-full max-w-md bg-gray-950 rounded-full h-2 mt-4 overflow-hidden">
+                            <div class="bg-gradient-to-r from-teal-500 to-blue-500 h-full rounded-full animate-pulse" style="width: 60%"></div>
+                        </div>
+                        <div class="text-xs text-gray-600 space-y-1 text-center">
+                            <p class="animate-pulse">• Discovering public pages</p>
+                            <p class="animate-pulse" style="animation-delay: 0.5s">• Filtering non-public content</p>
+                            <p class="animate-pulse" style="animation-delay: 1s">• Running AI analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden space-y-6">
+                
+                <!-- Discovered Pages -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl animate-slide-up">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-2xl">📊</span>
+                        <h2 class="text-lg font-bold text-gray-200">Discovered Public Pages</h2>
+                        <span id="pageCount" class="bg-teal-500/20 text-teal-400 text-xs px-2 py-1 rounded-full ml-auto"></span>
+                    </div>
+                    <div id="scannedPages" class="flex flex-wrap gap-2"></div>
+                    <div id="noPagesMessage" class="hidden text-gray-500 text-sm text-center py-4">
+                        No public pages were discovered
+                    </div>
+                </div>
+
+                <!-- Business Summary -->
+                <div class="bg-gray-900 border border-teal-900/30 rounded-2xl p-6 shadow-xl animate-slide-up" style="animation-delay: 0.1s">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-2xl">💼</span>
+                        <h2 class="text-xl font-bold text-teal-400">Business Summary</h2>
+                    </div>
+                    <div id="summaryContent" class="text-gray-300 leading-relaxed"></div>
+                </div>
+
+                <!-- Features & Issues Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Features -->
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl card-hover animate-slide-up" style="animation-delay: 0.2s">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-2xl">✨</span>
+                            <h2 class="text-xl font-bold text-blue-400">Identified Features</h2>
+                        </div>
+                        <ul id="featuresList" class="space-y-2">
+                            <li class="text-gray-500">No features detected yet</li>
+                        </ul>
+                    </div>
+
+                    <!-- Issues -->
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl card-hover animate-slide-up" style="animation-delay: 0.3s">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-2xl">⚠️</span>
+                            <h2 class="text-xl font-bold text-red-400">Issues & Gaps</h2>
+                        </div>
+                        <ul id="issuesList" class="space-y-3">
+                            <li class="text-gray-500">No issues detected yet</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Automation Opportunities -->
+                <div class="bg-gradient-to-br from-gray-900 to-teal-950/20 border border-teal-900/40 rounded-2xl p-6 shadow-xl animate-slide-up" style="animation-delay: 0.4s">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="text-2xl">🚀</span>
+                        <h2 class="text-xl font-bold text-teal-300">AI Automation Opportunities</h2>
+                    </div>
+                    <div id="automationContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="text-gray-500 text-center py-4 col-span-full">
+                            No automation opportunities identified yet
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-4 animate-slide-up" style="animation-delay: 0.5s">
+                    <button onclick="window.location.reload()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition">
+                        🔄 New Scan
+                    </button>
+                    <button onclick="exportResults()" class="px-6 py-3 bg-teal-500/20 hover:bg-teal-500/30 rounded-xl text-teal-400 transition">
+                        📥 Export Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorSection" class="hidden">
+                <div class="bg-red-900/20 border border-red-900/50 rounded-2xl p-8 text-center animate-fade-in">
+                    <span class="text-5xl mb-4 block">😕</span>
+                    <h3 class="text-xl font-bold text-red-400 mb-2">Audit Failed</h3>
+                    <p id="errorMessage" class="text-gray-400 mb-4"></p>
+                    <button onclick="resetAudit()" class="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-xl text-red-400 transition">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-12">
+        <div class="max-w-5xl mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+            <p>Powered by <span class="text-teal-400">Neeura AI</span> • Website Auditor v1.0</p>
+        </div>
+    </footer>
+
+    <script>
+        // Store last results for export
+        let lastResults = null;
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                error: 'bg-red-500/20 border-red-500 text-red-300',
+                success: 'bg-green-500/20 border-green-500 text-green-300',
+                info: 'bg-blue-500/20 border-blue-500 text-blue-300'
+            };
+            
+            toast.className = `toast px-4 py-3 rounded-lg border ${colors[type]} backdrop-blur-sm`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Set example URL
+        function setExampleUrl(url) {
+            document.getElementById('urlInput').value = url;
+            document.getElementById('urlInput').focus();
+        }
+
+        // Reset to initial state
+        function resetAudit() {
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('errorSection').classList.add('hidden');
+            document.getElementById('auditBtn').disabled = false;
+            document.getElementById('urlInput').disabled = false;
+        }
+
+        // Validate URL
+        function isValidUrl(url) {
+            try {
+                new URL(url.startsWith('http') ? url : `https://${url}`);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        // Start audit process
+        async function startAudit(event) {
+            event.preventDefault();
+            
+            const urlInput = document.getElementById('urlInput');
+            const btn = document.getElementById('auditBtn');
+            const loadingSection = document.getElementById('loadingSection');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorSection = document.getElementById('errorSection');
+            
+            let url = urlInput.value.trim();
+            
+            // Validate URL
+            if (!url) {
+                showToast('Please enter a website URL', 'error');
+                return;
+            }
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            
+            if (!isValidUrl(url)) {
+                showToast('Please enter a valid website URL', 'error');
+                return;
+            }
+            
+            // Reset UI
+            resetAudit();
+            
+            // Show loading
+            btn.disabled = true;
+            urlInput.disabled = true;
+            loadingSection.classList.remove('hidden');
+            
+            // Scroll to loading
+            loadingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            try {
+                const response = await fetch('/api/audit', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || data.suggestion || 'Audit failed');
+                }
+                
+                // Store results
+                lastResults = { ...data, audited_url: url, timestamp: new Date().toISOString() };
+                
+                // Render results
+                renderResults(data);
+                
+                // Hide loading, show results
+                loadingSection.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                showToast('Audit completed successfully!', 'success');
+                
+            } catch (err) {
+                console.error('Audit error:', err);
+                
+                // Hide loading
+                loadingSection.classList.add('hidden');
+                
+                // Show error
+                document.getElementById('errorMessage').textContent = err.message || 'An unexpected error occurred';
+                errorSection.classList.remove('hidden');
+                errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                showToast(err.message || 'Audit failed', 'error');
+                
+            } finally {
+                btn.disabled = false;
+                urlInput.disabled = false;
+            }
+        }
+
+        // Render audit results
+        function renderResults(data) {
+            // Scanned pages
+            const scannedPages = document.getElementById('scannedPages');
+            const pageCount = document.getElementById('pageCount');
+            const noPagesMessage = document.getElementById('noPagesMessage');
+            
+            scannedPages.innerHTML = '';
+            
+            if (data.scanned_pages && data.scanned_pages.length > 0) {
+                pageCount.textContent = `${data.scanned_pages.length} pages`;
+                pageCount.classList.remove('hidden');
+                noPagesMessage.classList.add('hidden');
+                
+                data.scanned_pages.forEach(url => {
+                    const span = document.createElement('span');
+                    span.className = "bg-gray-850 border border-gray-700 px-3 py-1.5 rounded-lg text-xs text-teal-400 hover:bg-gray-800 transition cursor-default";
+                    span.innerHTML = `<span class="mr-1">🔗</span>${truncateUrl(url)}`;
+                    span.title = url;
+                    scannedPages.appendChild(span);
+                });
+            } else {
+                pageCount.classList.add('hidden');
+                noPagesMessage.classList.remove('hidden');
+            }
+            
+            // Business summary
+            const summaryContent = document.getElementById('summaryContent');
+            summaryContent.innerHTML = data.business_summary ? 
+                `<p>${escapeHtml(data.business_summary)}</p>` : 
+                '<p class="text-gray-500">No summary available</p>';
+            
+            // Features
+            const featuresList = document.getElementById('featuresList');
+            featuresList.innerHTML = '';
+            if (data.detected_features && data.detected_features.length > 0) {
+                data.detected_features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-start gap-2 text-gray-300";
+                    li.innerHTML = `<span class="text-blue-400 mt-1">•</span><span>${escapeHtml(feature)}</span>`;
+                    featuresList.appendChild(li);
+                });
+            } else {
+                featuresList.innerHTML = '<li class="text-gray-500">No features detected</li>';
+            }
+            
+            // Issues
+            const issuesList = document.getElementById('issuesList');
+            issuesList.innerHTML = '';
+            if (data.issues && data.issues.length > 0) {
+                data.issues.forEach(issue => {
+                    const li = document.createElement('li');
+                    li.className = "bg-gray-950 border border-gray-800 rounded-lg p-3";
+                    
+                    const typeColors = {
+                        'SEO': 'text-yellow-400',
+                        'Accessibility': 'text-purple-400',
+                        'UX': 'text-blue-400',
+                        'Content': 'text-green-400',
+                        'Analysis Error': 'text-red-400'
+                    };
+                    
+                    const typeColor = typeColors[issue.type] || 'text-gray-400';
+                    
+                    li.innerHTML = `
+                        <div class="flex items-start gap-2">
+                            <span class="font-semibold ${typeColor} text-sm whitespace-nowrap">[${escapeHtml(issue.type)}]</span>
+                            <span class="text-gray-300 text-sm">${escapeHtml(issue.description)}</span>
+                        </div>
+                    `;
+                    issuesList.appendChild(li);
+                });
+            } else {
+                issuesList.innerHTML = '<li class="text-gray-500">No issues detected</li>';
+            }
+            
+            // Automation opportunities
+            const autoContainer = document.getElementById('automationContainer');
+            autoContainer.innerHTML = '';
+            if (data.automation_opportunities && data.automation_opportunities.length > 0) {
+                data.automation_opportunities.forEach(opt => {
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-950/80 p-4 rounded-xl border border-gray-800 hover:border-teal-500/50 transition-all duration-200";
+                    card.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">🤖</span>
+                            <div>
+                                <h3 class="font-semibold text-teal-400">${escapeHtml(opt.opportunity)}</h3>
+                                <p class="text-gray-400 text-sm mt-1">${escapeHtml(opt.impact)}</p>
+                            </div>
+                        </div>
+                    `;
+                    autoContainer.appendChild(card);
+                });
+            } else {
+                autoContainer.innerHTML = '<div class="text-gray-500 text-center py-4 col-span-full">No automation opportunities identified</div>';
+            }
+        }
+
+        // Export results as JSON
+        function exportResults() {
+            if (!lastResults) {
+                showToast('No results to export', 'error');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(lastResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audit-${lastResults.audited_url?.replace(/[^a-z0-9]/gi, '_') || 'report'}-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Report exported successfully!', 'success');
+        }
+
+        // Utility: Truncate URL for display
+        function truncateUrl(url) {
+            if (url.length <= 40) return url;
+            return url.substring(0, 37) + '...';
+        }
+
+        // Utility: Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', () => {
+            resetAudit();
+        });
+    </script>
+</body>
+</html>

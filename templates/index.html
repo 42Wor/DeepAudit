@@ -1,134 +1,315 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neeura AI - Website Auditor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col justify-between">
+{% extends "base.html" %}
 
-    <div class="max-w-4xl mx-auto px-4 py-12 w-full">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-                Neeura AI Auditor
-            </h1>
-            <p class="text-gray-400 mt-2">Map public pages, spot conversion flaws, and discover automation options.</p>
-        </header>
+{% block content %}
+<!-- Hero Section (Will be hidden on submit) -->
+<div id="hero-wrapper" class="text-center py-6 sm:py-10 lg:py-16 px-2 mb-4">
+    <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight leading-tight drop-shadow-xl">
+        Website <span class="gradient-text animate-gradient-x">Automation Auditor</span>
+    </h1>
+    <p class="text-gray-400 text-sm sm:text-base md:text-lg lg:text-xl max-w-3xl mx-auto px-4 leading-relaxed">
+        Enter your website URL to discover how Deep Audit can streamline your operations, boost conversions, and automate your workflows.
+    </p>
+</div>
 
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl mb-8">
-            <div class="flex flex-col md:flex-row gap-3">
-                <input id="urlInput" type="text" placeholder="e.g., neeura.ai" 
-                    class="bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-white flex-grow focus:outline-none focus:border-teal-500 transition">
-                <button id="auditBtn" onclick="startAudit()" 
-                    class="bg-teal-500 hover:bg-teal-600 text-gray-950 font-bold px-6 py-3 rounded-lg transition duration-200">
-                    Scan Domain
-                </button>
+<!-- Search Bar (Moves to top when hero hides) -->
+<div id="search-container" class="glass-card rounded-2xl p-3 sm:p-4 lg:p-6 mb-8 sm:mb-12 max-w-4xl mx-auto relative z-20 transition-all duration-700">
+    <form id="audit-form" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div class="relative flex-grow">
+            <i class="fas fa-globe absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+            <input type="url" id="url-input" required placeholder="https://yourwebsite.com" 
+                   class="w-full bg-black/40 border border-brand-border rounded-xl py-4 pl-12 pr-4 text-base lg:text-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner">
+        </div>
+        <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-all flex items-center justify-center gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-base lg:text-lg">
+            <i class="fas fa-magic"></i> <span>Generate Audit</span>
+        </button>
+    </form>
+</div>
+
+<!-- Skeleton Loading State -->
+<div id="skeleton-state" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full animate-fade-in-up">
+    
+    <!-- 1. TOP: Business Summary & Detected Features Skeleton -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
+            <div class="flex items-center gap-3 mb-5 sm:mb-6">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
             </div>
-            <div id="loading" class="hidden mt-4 text-sm text-teal-400 animate-pulse">
-                Mapping domain structure, filtering login pages, and evaluating with AI...
+            <div class="space-y-3 flex-grow">
+                <div class="h-4 bg-white/10 rounded w-full"></div>
+                <div class="h-4 bg-white/10 rounded w-full"></div>
+                <div class="h-4 bg-white/10 rounded w-5/6"></div>
+                <div class="h-4 bg-white/10 rounded w-4/6"></div>
             </div>
         </div>
-
-        <div id="results" class="hidden space-y-8">
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-                <h2 class="text-lg font-bold text-gray-300 mb-2">Discovered Public Pages Map</h2>
-                <div id="scannedPages" class="flex flex-wrap gap-2"></div>
+        
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
+            <div class="flex items-center gap-3 mb-5 sm:mb-6">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
             </div>
-
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-                <h2 class="text-xl font-bold text-teal-400 mb-2">Business Summary</h2>
-                <p id="summaryText" class="text-gray-300"></p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-                    <h2 class="text-xl font-bold text-blue-400 mb-3">Identified Features</h2>
-                    <ul id="featuresList" class="list-disc pl-5 space-y-1 text-gray-300"></ul>
-                </div>
-                <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-                    <h2 class="text-xl font-bold text-red-400 mb-3">Red Flags & Gaps</h2>
-                    <ul id="issuesList" class="space-y-3 text-gray-300"></ul>
-                </div>
-            </div>
-
-            <div class="bg-gray-900 border border-teal-900/40 p-6 rounded-xl bg-gradient-to-br from-gray-900 to-teal-950/20">
-                <h2 class="text-xl font-bold text-teal-300 mb-3">🚀 Recommended AI Automation Opportunities</h2>
-                <div id="automationContainer" class="space-y-4"></div>
+            <div class="space-y-3 sm:space-y-4 flex-grow">
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        async function startAudit() {
-            const urlInput = document.getElementById('urlInput').value.trim();
-            if (!urlInput) return alert('Please enter a target URL.');
+    <!-- 2. MIDDLE: Automation Opportunities Skeleton -->
+    <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/20 border-2 animate-pulse">
+        <div class="mb-8 sm:mb-12 text-center sm:text-left">
+            <div class="h-6 bg-white/10 rounded-full w-48 mb-4 mx-auto sm:mx-0"></div>
+            <div class="h-10 sm:h-12 bg-white/10 rounded w-3/4 sm:w-1/2 mb-4 mx-auto sm:mx-0"></div>
+            <div class="h-4 sm:h-6 bg-white/10 rounded w-full sm:w-2/3 mx-auto sm:mx-0"></div>
+        </div>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+            <div class="h-28 sm:h-32 bg-white/10 rounded-2xl w-full"></div>
+            <div class="h-28 sm:h-32 bg-white/10 rounded-2xl w-full"></div>
+            <div class="h-28 sm:h-32 bg-white/10 rounded-2xl w-full"></div>
+            <div class="h-28 sm:h-32 bg-white/10 rounded-2xl w-full"></div>
+        </div>
+    </div>
 
-            const btn = document.getElementById('auditBtn');
-            const loading = document.getElementById('loading');
-            const resultsDiv = document.getElementById('results');
+    <!-- 3. BOTTOM: Issues & Scanned Pages Skeleton -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 animate-pulse">
+            <div class="flex items-center gap-3 mb-5 sm:mb-6">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
+            </div>
+            <div class="space-y-4">
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
+            </div>
+        </div>
 
-            btn.disabled = true;
-            loading.classList.remove('hidden');
-            resultsDiv.classList.add('hidden');
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 animate-pulse">
+            <div class="flex items-center gap-3 mb-5 sm:mb-6">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
+            </div>
+            <div class="space-y-2 sm:space-y-3">
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            try {
-                const response = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: urlInput })
-                });
+<!-- Results Section -->
+<div id="results-section" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full opacity-0 transition-opacity duration-700">
+    
+    <!-- 1. TOP: Business Summary & Detected Features -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <!-- Business Summary -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
+            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
+                <div class="p-2 sm:p-3 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner"><i class="fas fa-chart-pie"></i></div>
+                Business Summary
+            </h3>
+            <p id="res-summary" class="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg flex-grow"></p>
+        </div>
+        
+        <!-- Detected Features -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
+            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
+                <div class="p-2 sm:p-3 bg-brand-accent/20 rounded-xl text-brand-accent shadow-inner"><i class="fas fa-star"></i></div>
+                Detected Features
+            </h3>
+            <ul id="res-features" class="space-y-3 sm:space-y-4 flex-grow"></ul>
+        </div>
+    </div>
 
-                if (!response.ok) {
-                    const errorDetails = await response.json();
-                    throw new Error(errorDetails.error || 'Server processing error occurred.');
-                }
-                const data = await response.json();
+    <!-- 2. MIDDLE: Automation Opportunities -->
+    <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/50 border-2 relative overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.1)]">
+        <div class="absolute top-0 right-0 w-64 h-64 sm:w-[500px] sm:h-[500px] bg-brand-primary opacity-15 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 sm:w-[500px] sm:h-[500px] bg-brand-secondary opacity-15 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none"></div>
+        
+        <div class="relative z-10 mb-8 sm:mb-12 text-center sm:text-left">
+            <div class="inline-block mb-4 px-4 py-1.5 rounded-full border border-brand-primary/40 bg-brand-primary/10 text-brand-primary text-xs sm:text-sm font-bold uppercase tracking-widest shadow-sm">
+                Deep Audit Strategy
+            </div>
+            <h3 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold flex flex-col sm:flex-row items-center sm:justify-start gap-3 sm:gap-4 text-white mb-4 tracking-tight">
+                <i class="fas fa-robot text-brand-primary drop-shadow-md"></i> Automation & Business Plan
+            </h3>
+            <p class="text-gray-300 text-sm sm:text-base lg:text-xl max-w-3xl">Custom AI agents, CRM automations, and intelligent workflows designed to scale your revenue and reduce manual overhead.</p>
+        </div>
+        
+        <div id="res-automation" class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 relative z-10"></div>
+        
+        <div class="mt-10 sm:mt-14 text-center relative z-10">
+            <a href="https://neeura.ai/" target="_blank" class="inline-block bg-white text-black hover:bg-gray-200 font-extrabold py-4 sm:py-5 px-8 sm:px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:scale-105 text-sm sm:text-lg w-full sm:w-auto">
+                Discuss Implementation with Neeura.ai <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
 
-                const scannedPages = document.getElementById('scannedPages');
-                scannedPages.innerHTML = '';
-                data.scanned_pages.forEach(url => {
-                    const span = document.createElement('span');
-                    span.className = "bg-gray-850 border border-gray-800 px-3 py-1 rounded text-xs text-teal-400";
-                    span.innerText = url;
-                    scannedPages.appendChild(span);
-                });
+    <!-- 3. BOTTOM: Issues & Scanned Pages -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <!-- Issues -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10">
+            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
+                <div class="p-2 sm:p-3 bg-red-500/20 rounded-xl text-red-400 shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
+                Issues & Bottlenecks
+            </h3>
+            <ul id="res-issues" class="grid grid-cols-1 gap-4"></ul>
+        </div>
 
-                document.getElementById('summaryText').innerText = data.business_summary;
+        <!-- Scanned Pages -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10">
+            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
+                <div class="p-2 sm:p-3 bg-brand-secondary/20 rounded-xl text-brand-secondary shadow-inner"><i class="fas fa-sitemap"></i></div>
+                Scanned Pages
+            </h3>
+            <ul id="res-pages" class="space-y-2 sm:space-y-3 text-sm sm:text-base text-gray-400 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 sm:pr-4"></ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-                const featuresList = document.getElementById('featuresList');
-                featuresList.innerHTML = '';
-                data.detected_features.forEach(feat => {
-                    const li = document.createElement('li');
-                    li.innerText = feat;
-                    featuresList.appendChild(li);
-                });
+{% block scripts %}
+<script>
+    // Fresh Start Functionality
+    window.resetAudit = function() {
+        const urlInput = document.getElementById('url-input');
+        const resultsSection = document.getElementById('results-section');
+        const skeletonState = document.getElementById('skeleton-state');
+        const heroWrapper = document.getElementById('hero-wrapper');
+        const searchContainer = document.getElementById('search-container');
+        const freshStartBtn = document.getElementById('fresh-start-btn');
+        
+        // Clear input
+        urlInput.value = '';
+        
+        // Hide results, skeleton, and the fresh start button
+        resultsSection.classList.add('hidden');
+        resultsSection.classList.remove('opacity-100', 'flex');
+        skeletonState.classList.add('hidden');
+        skeletonState.classList.remove('flex');
+        freshStartBtn.classList.add('hidden');
+        
+        // Show Hero and reset search bar width
+        heroWrapper.classList.remove('hero-hidden');
+        searchContainer.classList.replace('max-w-5xl', 'max-w-4xl');
+        
+        // Automatically focus the input field after a tiny delay for smooth transition
+        setTimeout(() => {
+            urlInput.focus();
+        }, 300);
+    };
 
-                const issuesList = document.getElementById('issuesList');
-                issuesList.innerHTML = '';
-                data.issues.forEach(issue => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<span class="font-semibold text-red-400">[${issue.type}]</span> ${issue.description}`;
-                    issuesList.appendChild(li);
-                });
+    // Form Submission Logic
+    document.getElementById('audit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const url = document.getElementById('url-input').value;
+        const submitBtn = document.getElementById('submit-btn');
+        const skeletonState = document.getElementById('skeleton-state');
+        const resultsSection = document.getElementById('results-section');
+        const heroWrapper = document.getElementById('hero-wrapper');
+        const searchContainer = document.getElementById('search-container');
+        const freshStartBtn = document.getElementById('fresh-start-btn');
+        
+        // UI Updates: Hide Hero, Expand Search Bar slightly
+        heroWrapper.classList.add('hero-hidden');
+        searchContainer.classList.replace('max-w-4xl', 'max-w-5xl');
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Scanning...</span>';
+        
+        // Hide results if doing a new search, show skeleton loading
+        resultsSection.classList.add('hidden');
+        resultsSection.classList.remove('opacity-100');
+        skeletonState.classList.remove('hidden');
+        skeletonState.classList.add('flex');
+        freshStartBtn.classList.add('hidden'); // Keep hidden while loading
+        
+        try {
+            const response = await fetch('/api/audit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            
+            const data = await response.json();
+            
+            if(response.ok) {
+                // 1. Populate Summary
+                document.getElementById('res-summary').textContent = data.business_summary;
+                
+                // 2. Populate Features
+                const featuresList = document.getElementById('res-features');
+                featuresList.innerHTML = data.detected_features.map(f => `
+                    <li class="flex items-start gap-3 sm:gap-4 text-gray-300 bg-black/40 p-3 sm:p-4 rounded-xl border border-brand-border hover:border-brand-accent/30 transition-colors">
+                        <i class="fas fa-check-circle text-brand-accent mt-1 text-sm sm:text-base"></i> 
+                        <span class="text-sm sm:text-base lg:text-lg">${f}</span>
+                    </li>
+                `).join('');
 
-                const autoContainer = document.getElementById('automationContainer');
-                autoContainer.innerHTML = '';
-                data.automation_opportunities.forEach(opt => {
-                    const card = document.createElement('div');
-                    card.className = "bg-gray-950 p-4 rounded-lg border border-gray-800";
-                    card.innerHTML = `<h3 class="font-semibold text-teal-400">${opt.opportunity}</h3><p class="text-gray-400 text-sm mt-1">${opt.impact}</p>`;
-                    autoContainer.appendChild(card);
-                });
+                // 3. Populate Automation (List View - Middle)
+                const autoList = document.getElementById('res-automation');
+                autoList.innerHTML = data.automation_opportunities.map((a, index) => `
+                    <div class="bg-black/40 p-5 sm:p-6 lg:p-8 rounded-2xl border border-brand-border hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all duration-300 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start group shadow-lg">
+                        <div class="bg-brand-primary/10 text-brand-primary w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-lg sm:text-xl lg:text-2xl group-hover:scale-110 group-hover:bg-brand-primary group-hover:text-white transition-all shadow-inner">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <h4 class="text-base sm:text-lg lg:text-xl font-bold text-white mb-2 group-hover:text-brand-primary transition-colors">${a.opportunity}</h4>
+                            <p class="text-gray-400 text-sm sm:text-base lg:text-lg leading-relaxed">${a.impact}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // 4. Populate Issues
+                const issuesList = document.getElementById('res-issues');
+                issuesList.innerHTML = data.issues.map(i => `
+                    <li class="bg-black/40 p-4 sm:p-5 rounded-xl border border-brand-border border-l-4 border-l-red-500/60 hover:bg-red-500/5 transition-colors">
+                        <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-400 mb-2 block">${i.type}</span>
+                        <span class="text-gray-300 text-sm sm:text-base lg:text-lg">${i.description}</span>
+                    </li>
+                `).join('');
 
-                resultsDiv.classList.remove('hidden');
-            } catch (err) {
-                alert(err.message || 'Audit execution failed.');
-            } finally {
-                btn.disabled = false;
-                loading.classList.add('hidden');
+                // 5. Populate Pages
+                const pagesList = document.getElementById('res-pages');
+                pagesList.innerHTML = data.scanned_pages.map(p => `
+                    <li class="flex items-center gap-3 truncate bg-black/40 p-3 sm:p-4 rounded-xl border border-brand-border hover:border-brand-secondary/50 hover:bg-brand-secondary/5 transition-colors" title="${p}">
+                        <i class="fas fa-link text-xs sm:text-sm text-brand-secondary flex-shrink-0"></i>
+                        <a href="${p}" target="_blank" class="truncate hover:text-brand-secondary transition-colors text-sm sm:text-base lg:text-lg">${p}</a>
+                    </li>
+                `).join('');
+                
+                // Hide skeleton loading, show results with fade in
+                skeletonState.classList.add('hidden');
+                skeletonState.classList.remove('flex');
+                resultsSection.classList.remove('hidden');
+                resultsSection.classList.add('flex');
+                
+                // Show the Fresh Start button in the header
+                freshStartBtn.classList.remove('hidden');
+                
+                // Small delay to allow display:flex to apply before changing opacity
+                setTimeout(() => {
+                    resultsSection.classList.add('opacity-100');
+                }, 50);
+
+            } else {
+                alert(data.error || 'An error occurred');
+                skeletonState.classList.add('hidden');
+                skeletonState.classList.remove('flex');
+                heroWrapper.classList.remove('hero-hidden'); // Show hero again on error
             }
+        } catch (error) {
+            alert('Failed to connect to the server.');
+            skeletonState.classList.add('hidden');
+            skeletonState.classList.remove('flex');
+            heroWrapper.classList.remove('hero-hidden');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
         }
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}
