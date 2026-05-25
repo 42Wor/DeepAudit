@@ -1,58 +1,134 @@
-import time
-from typing import Dict, Any
+import os
+import json
+from typing import Dict, Any, List
+from google import genai
+from google.genai import types
 
-def run_ai_audit(url: str, combined_text: str) -> Dict[str, Any]:
+# ===========================================================================
+# Native Schema Definition (Plain Dict – avoids SDK serialization pitfalls)
+# ===========================================================================
+
+audit_report_schema = {
+    "type": "OBJECT",
+    "properties": {
+        "business_summary": {
+            "type": "STRING",
+            "description": "2-3 sentence summary of what this business/website does based on content"
+        },
+        "detected_features": {
+            "type": "ARRAY",
+            "items": {"type": "STRING"},
+            "description": "List of key features, services, or products identified on the site"
+        },
+        "issues": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "type": {
+                        "type": "STRING",
+                        "description": "The category of the issue, e.g., SEO, Accessibility, UX, Content, or Operations"
+                    },
+                    "description": {
+                        "type": "STRING",
+                        "description": "A concise description of the detected issue and its operational impact"
+                    }
+                },
+                "required": ["type", "description"]
+            },
+            "description": "List of problems, bottlenecks, or technical gaps found on the site"
+        },
+        "automation_opportunities": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "opportunity": {
+                        "type": "STRING",
+                        "description": "Name or title of the automation opportunity"
+                    },
+                    "impact": {
+                        "type": "STRING",
+                        "description": "Detailed impact on business efficiency, scale, or user experience"
+                    }
+                },
+                "required": ["opportunity", "impact"]
+            },
+            "description": "AI automation opportunities that could improve this business operations"
+        }
+    },
+    "required": ["business_summary", "detected_features", "issues", "automation_opportunities"]
+}
+
+# ===========================================================================
+# Core AI Audit Function (Single, self-contained entry point)
+# ===========================================================================
+
+def run_ai_audit(url: str, combined_text: str) -> dict:
     """
-    PLACEHOLDER FUNCTION
-    Will eventually send scraped content to Gemini AI for structured analysis.
-    Currently returns the exact dummy JSON structure expected by the frontend.
-    """
-    # Simulate AI processing delay
-    time.sleep(2.0) 
+    Runs the website analysis using the Gemini API (google-genai SDK).
     
-    return {
-        "business_summary": "This website represents a growing business that offers various services to its clients. While the site has a solid foundation, it currently relies heavily on manual processes for customer engagement, lead generation, and support, presenting significant opportunities for AI-driven scaling.",
-        "detected_features": [
-            "Contact & Inquiry Forms",
-            "Service/Product Listings",
-            "Customer Testimonials",
-            "Blog & News Section",
-            "Newsletter Subscription"
-        ],
-        "issues": [
-            {
-                "type": "UX / Conversion",
-                "description": "No immediate automated response mechanism for customer inquiries, potentially leading to drop-offs."
-            },
-            {
-                "type": "Operations",
-                "description": "Lead capture forms do not seem to be connected to an automated qualification or CRM routing system."
-            },
-            {
-                "type": "Content",
-                "description": "Static content delivery without personalized recommendations based on user behavior."
-            },
-            {
-                "type": "SEO",
-                "description": "Missing dynamic meta tags and structured data on several key service pages."
-            }
-        ],
-        "automation_opportunities": [
-            {
-                "opportunity": "Intelligent Customer Support Agent",
-                "impact": "Deploy a custom AI chatbot trained on your business data to handle 24/7 customer inquiries, instantly answering FAQs and routing complex issues to human staff."
-            },
-            {
-                "opportunity": "Automated Lead Qualification & CRM Sync",
-                "impact": "Implement intelligent workflows to automatically score incoming leads from your contact forms and sync them directly to your CRM with AI-generated summaries."
-            },
-            {
-                "opportunity": "AI-Driven Content Generation Pipeline",
-                "impact": "Utilize AI content tools to automatically generate blog drafts, social media posts, and newsletters based on trending topics in your industry."
-            },
-            {
-                "opportunity": "Smart Invoice & Follow-up Automation",
-                "impact": "Streamline your billing process by automatically generating invoices and sending intelligent, polite follow-up emails for overdue payments."
-            }
-        ]
-    }
+    To change AI providers in the future (e.g. to OpenAI or Anthropic), 
+    this is the ONLY function in your entire application you will need to edit.
+    """
+    # Truncate content to fit securely inside LLM context window limits
+    max_chars = 40000  
+    if len(combined_text) > max_chars:
+        combined_text = combined_text[:max_chars] + "\n[Content truncated due to length limits]"
+    
+    prompt = f"""
+You are an expert web auditor and AI automation consultant. Analyze the scraped content from {url} and provide a comprehensive, highly professional audit.
+
+SCRAPED CONTENT:
+{combined_text}
+
+Provide a structured analysis covering:
+1. What the business does (2-3 sentences)
+2. Key features, services, or products detected
+3. Issues found (SEO, accessibility, UX, content quality, or operational bottlenecks)
+4. AI automation opportunities that could improve this business
+
+Focus on practical, actionable insights. Be specific, realistic, and avoid generic recommendations.
+"""
+    
+    try:
+        # Initialize the modern Gemini Client using the environment variable API key
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        
+        print(f"   [AI] Initialized Gemini Client successfully.")
+        print(f"   [AI] Sending content to Gemini (gemini-3.5-flash) for structured audit...")
+        print(f"   [AI] Total payload size: {len(combined_text)} characters.")
+        
+        response = client.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.3,
+                response_mime_type="application/json",
+                response_schema=audit_report_schema,
+            )
+        )
+        
+        print(f"   [AI] Received raw response from Gemini API. Parsing response text...")
+        
+        # Parse and return the structured JSON response
+        result_json = json.loads(response.text)
+        print(f"   [AI] Successfully parsed response JSON. Main keys: {list(result_json.keys())}")
+        return result_json
+        
+    except Exception as e:
+        print(f"   [AI Error] Gemini analysis failed: {e}")
+        
+        # Safe fallback schema matching frontend expectations on API failure
+        return {
+            "business_summary": f"Unable to analyze {url} dynamically. The site may require JavaScript rendering or the active AI service is currently unavailable.",
+            "detected_features": ["Analysis error: Features could not be loaded."],
+            "issues": [{
+                "type": "System Error",
+                "description": f"AI analysis failed to complete: {str(e)}. Please check API credentials and network quotas."
+            }],
+            "automation_opportunities": [{
+                "opportunity": "Manual Audit Required",
+                "impact": "The automated analysis cycle was interrupted. Please review the website's paths manually."
+            }]
+        }
