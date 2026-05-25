@@ -1,70 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-{# ===== HEADER STEPPER (desktop) ===== #}
-<div id="header-stepper" class="fixed top-0 left-0 right-0 z-50 flex justify-center items-center gap-2 py-3 px-4 bg-brand-bg/95 backdrop-blur-md border-b border-brand-border transition-all duration-500 opacity-0 translate-y-[-10px]" style="display:none;">
-    <div id="h-step-submit" class="flex items-center gap-1 opacity-30">
-        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-paper-plane text-[8px]"></i></div>
-        <span class="text-gray-400 hidden lg:inline">Submit</span>
-    </div>
-    <div id="h-line-1" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
-    <div id="h-step-discover" class="flex items-center gap-1 opacity-30">
-        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-sitemap text-[8px]"></i></div>
-        <span class="text-gray-400 hidden lg:inline">Discover</span>
-    </div>
-    <div id="h-line-2" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
-    <div id="h-step-scrape" class="flex items-center gap-1 opacity-30">
-        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-file-alt text-[8px]"></i></div>
-        <span class="text-gray-400 hidden lg:inline">Scrape</span>
-    </div>
-    <div id="h-line-3" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
-    <div id="h-step-analyze" class="flex items-center gap-1 opacity-30">
-        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-robot text-[8px]"></i></div>
-        <span class="text-gray-400 hidden lg:inline">Analyze</span>
-    </div>
-    <div id="h-line-4" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
-    <div id="h-step-ready" class="flex items-center gap-1 opacity-30">
-        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-flag-checkered text-[8px]"></i></div>
-        <span class="text-gray-400 hidden lg:inline">Complete</span>
-    </div>
-</div>
-
-{# ===== HEADER STEPPER (mobile) ===== #}
-<div id="header-stepper-mobile" class="fixed top-0 left-0 right-0 z-50 bg-brand-bg/95 backdrop-blur-md border-b border-brand-border px-4 py-2 text-center transition-all duration-500 opacity-0" style="display:none;">
-    <span id="header-stepper-mobile-text" class="text-brand-primary font-mono text-xs font-bold">1/5: Submitting</span>
-</div>
-
-{# ===== FLOATING NEW AUDIT BUTTON ===== #}
-<button id="fresh-start-btn" class="hidden fixed bottom-6 right-6 z-50 bg-brand-primary text-white rounded-full p-4 shadow-lg hover:bg-brand-secondary transition-all" onclick="resetAudit()" title="New Audit">
-    <i class="fas fa-redo"></i>
-</button>
-
-<!-- Hero Section -->
-<div id="hero-wrapper" class="text-center py-10 sm:py-16 px-4 mb-2">
-    <div class="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mb-8 text-xs font-mono tracking-wider uppercase text-gray-500">
-        <span>Developed by <a href="https://github.com/42Wor" target="_blank" class="text-gray-300 font-semibold hover:text-white transition-colors">Maaz Waheed</a></span>
+<!-- Hero Section (Responsive font scaling for mobile viewports below 440px) -->
+<div id="hero-wrapper" class="text-center py-6 sm:py-16 px-2 mb-2 max-w-4xl mx-auto transition-all duration-700">
+    <div class="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mb-6 text-[10px] min-[380px]:text-xs font-mono tracking-wider uppercase text-gray-500">
+        <span>Developed by <a href="https://github.com/42Wor" target="_blank" class="text-gray-300 font-semibold hover:text-brand-primary transition-colors">Maaz Waheed</a></span>
         <span class="text-gray-700 select-none">•</span>
         <span>Powered by <a href="https://neeura.ai/" target="_blank" class="text-brand-primary hover:text-brand-secondary transition-colors font-bold tracking-widest">NEEURA.AI</a></span>
     </div>
     
-    <h1 class="text-3xl sm:text-5xl md:text-6xl font-black mb-6 tracking-tight text-white max-w-4xl mx-auto leading-[1.1]">
+    <h1 class="text-2xl min-[380px]:text-3xl sm:text-5xl md:text-6xl font-black mb-4 sm:mb-6 tracking-tight text-white leading-[1.15]">
         Website <span class="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">Automation Auditor</span>
     </h1>
     
-    <p class="text-gray-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+    <p class="text-gray-400 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
         Enter your website URL to instantly map key operational features, discover bottlenecks, and plan structured AI automation strategies.
     </p>
 </div>
 
 <!-- Search Bar / Form -->
-<div id="search-container" class="glass-card rounded-2xl p-3 sm:p-4 lg:p-6 mb-8 sm:mb-12 max-w-4xl mx-auto relative z-20 transition-all duration-700">
+<div id="search-container" class="glass-card rounded-2xl p-2.5 sm:p-4 lg:p-6 mb-8 sm:mb-12 max-w-4xl mx-auto relative z-20 transition-all duration-700">
     <form id="audit-form" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div class="relative flex-grow">
-            <i class="fas fa-globe absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+            <i class="fas fa-globe absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-base sm:text-lg"></i>
             <input type="text" id="url-input" required placeholder="https://yourwebsite.com" 
-                   class="w-full bg-black/40 border border-brand-border rounded-xl py-4 pl-12 pr-4 text-base lg:text-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner">
+                   class="w-full bg-black/40 border border-brand-border rounded-xl py-3.5 pl-11 pr-3.5 sm:py-4 sm:pl-12 sm:pr-4 text-sm sm:text-base lg:text-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner">
         </div>
-        <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-all flex items-center justify-center gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-base lg:text-lg">
+        <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-3.5 px-6 sm:py-4 sm:px-8 rounded-xl transition-all flex items-center justify-center gap-2.5 sm:gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-sm sm:text-base lg:text-lg">
             <i class="fas fa-magic"></i> <span>Generate Audit</span>
         </button>
     </form>
@@ -72,16 +34,16 @@
 
 <!-- Inline Error Alert Card -->
 <div id="error-container" class="hidden max-w-4xl mx-auto mb-10 animate-fade-in-up">
-    <div class="bg-red-500/10 border-2 border-red-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-5 relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+    <div class="bg-red-500/10 border-2 border-red-500/30 rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-5 relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
         <div class="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-10 rounded-full blur-[50px] pointer-events-none"></div>
-        <div class="p-3 bg-red-500/20 rounded-xl text-red-400 flex-shrink-0">
-            <i class="fas fa-exclamation-triangle text-xl sm:text-2xl"></i>
+        <div class="p-2.5 bg-red-500/20 rounded-xl text-red-400 flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-lg sm:text-2xl"></i>
         </div>
         <div class="space-y-2 flex-grow">
-            <h4 class="text-lg font-extrabold text-white tracking-tight" id="error-title">Audit Interrupted</h4>
-            <p class="text-gray-300 text-sm sm:text-base leading-relaxed" id="error-message"></p>
+            <h4 class="text-base sm:text-lg font-extrabold text-white tracking-tight" id="error-title">Audit Interrupted</h4>
+            <p class="text-gray-300 text-xs sm:text-base leading-relaxed" id="error-message"></p>
             <div class="bg-black/30 border border-white/5 rounded-xl p-3 sm:p-4 mt-3">
-                <span class="text-xs font-mono font-bold uppercase tracking-widest text-red-400 block mb-1">Recommended Solution</span>
+                <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-red-400 block mb-1">Recommended Solution</span>
                 <p class="text-gray-400 text-xs sm:text-sm leading-relaxed" id="error-suggestion"></p>
             </div>
         </div>
@@ -90,128 +52,126 @@
 
 <!-- Secondary Status Log Box -->
 <div id="body-status-container" class="hidden max-w-4xl mx-auto mb-10 w-full text-center animate-fade-in-up">
-    <p id="stepper-status-msg" class="text-gray-400 text-sm font-mono tracking-wide animate-pulse">Establishing stream channel...</p>
+    <p id="stepper-status-msg" class="text-gray-400 text-xs sm:text-sm font-mono tracking-wide animate-pulse">Establishing stream channel...</p>
 </div>
 
 <!-- Skeleton Loading State -->
 <div id="skeleton-state" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full animate-fade-in-up">
     <!-- Skeleton Top Stats Row -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
-            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
-            <div class="h-5 bg-white/10 rounded w-3/4"></div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div class="glass-card rounded-2xl p-3.5 sm:p-5 h-20 sm:h-24 animate-pulse bg-white/[0.02]">
+            <div class="h-2.5 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-4 bg-white/10 rounded w-3/4"></div>
         </div>
-        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
-            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
-            <div class="h-5 bg-white/10 rounded w-2/5"></div>
+        <div class="glass-card rounded-2xl p-3.5 sm:p-5 h-20 sm:h-24 animate-pulse bg-white/[0.02]">
+            <div class="h-2.5 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-4 bg-white/10 rounded w-2/5"></div>
         </div>
-        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
-            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
-            <div class="h-5 bg-white/10 rounded w-3/5"></div>
+        <div class="glass-card rounded-2xl p-3.5 sm:p-5 h-20 sm:h-24 animate-pulse bg-white/[0.02]">
+            <div class="h-2.5 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-4 bg-white/10 rounded w-3/5"></div>
         </div>
-        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
-            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
-            <div class="h-5 bg-white/10 rounded w-1/2"></div>
+        <div class="glass-card rounded-2xl p-3.5 sm:p-5 h-20 sm:h-24 animate-pulse bg-white/[0.02]">
+            <div class="h-2.5 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-4 bg-white/10 rounded w-1/2"></div>
         </div>
     </div>
     
-    <!-- Business Summary Skeleton (Full Width) -->
-    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col animate-pulse bg-white/[0.01]">
-        <div class="flex items-center gap-3 mb-5 sm:mb-6">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-            <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
+    <!-- Business Summary Skeleton -->
+    <div class="glass-card rounded-3xl p-5 sm:p-8 flex flex-col animate-pulse bg-white/[0.01]">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+            <div class="h-5 sm:h-8 bg-white/10 rounded w-1/2"></div>
         </div>
         <div class="space-y-3 flex-grow">
-            <div class="h-4 bg-white/10 rounded w-full"></div>
-            <div class="h-4 bg-white/10 rounded w-full"></div>
-            <div class="h-4 bg-white/10 rounded w-5/6"></div>
-        </div>
-    </div>
-
-    <!-- Issues Skeleton (Full Width) -->
-    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col animate-pulse bg-white/[0.01]">
-        <div class="flex items-center gap-3 mb-5 sm:mb-6">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-            <div class="h-6 sm:h-8 bg-white/10 rounded w-1/3"></div>
-        </div>
-        <div class="space-y-4 flex-grow">
-            <div class="h-16 bg-white/10 rounded-xl w-full"></div>
-            <div class="h-16 bg-white/10 rounded-xl w-full"></div>
-        </div>
-    </div>
-    
-    <!-- Automation Plan Skeleton -->
-    <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/20 border-2 animate-pulse bg-white/[0.01]">
-        <div class="mb-8 text-center sm:text-left">
-            <div class="h-6 bg-white/10 rounded-full w-48 mb-4 mx-auto sm:mx-0"></div>
-            <div class="h-10 bg-white/10 rounded w-1/2 mb-4 mx-auto sm:mx-0"></div>
-        </div>
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <div class="h-28 bg-white/10 rounded-2xl w-full"></div>
-            <div class="h-28 bg-white/10 rounded-2xl w-full"></div>
+            <div class="h-3 sm:h-4 bg-white/10 rounded w-full"></div>
+            <div class="h-3 sm:h-4 bg-white/10 rounded w-full"></div>
+            <div class="h-3 sm:h-4 bg-white/10 rounded w-5/6"></div>
         </div>
     </div>
 </div>
 
 <!-- Results Section -->
 <div id="results-section" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full opacity-0 transition-opacity duration-700">
-    <!-- Top Stats Row -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
-            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Detected Industry</span>
-            <span id="res-industry" class="text-sm sm:text-lg lg:text-xl font-extrabold text-white capitalize">-</span>
-        </div>
-        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border-l-4 border-l-brand-primary">
-            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Automation Score</span>
-            <div class="flex items-baseline gap-1">
-                <span id="res-score" class="text-xl sm:text-2xl lg:text-3xl font-black text-brand-primary">-</span>
-                <span class="text-[10px] sm:text-xs text-gray-500 font-bold">/100</span>
-            </div>
-        </div>
-        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border-l-4 border-l-yellow-500">
-            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Hours Wasted / Mo</span>
-            <span id="res-hours-wasted" class="text-lg sm:text-xl lg:text-2xl font-black text-yellow-500">-</span>
-        </div>
-        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border-l-4 border-l-red-500">
-            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Money Lost / Mo</span>
-            <span id="res-money-lost" class="text-lg sm:text-xl lg:text-2xl font-black text-red-500">-</span>
-        </div>
-    </div>
-
-    <!-- Business Summary (Full Width / Long) -->
-    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
-        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-            <div class="p-2 sm:p-3 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner"><i class="fas fa-chart-pie"></i></div>
-            Business Summary
-        </h3>
-        <p id="res-summary" class="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg"></p>
-    </div>
     
-    <!-- Issues & Bottlenecks (Full Width / Long, Stacked Below Summary) -->
-    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
-        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-            <div class="p-2 sm:p-3 bg-red-500/20 rounded-xl text-red-400 shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
-            Issues & Bottlenecks
-        </h3>
-        <ul id="res-issues" class="grid grid-cols-1 gap-4"></ul>
+    <!-- Top Stats Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div class="glass-card rounded-2xl p-3.5 sm:p-6 flex flex-col justify-between">
+            <span class="text-[9px] min-[380px]:text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Detected Industry</span>
+            <span id="res-industry" class="text-xs min-[380px]:text-sm sm:text-lg lg:text-xl xl:text-2xl font-extrabold text-white capitalize break-words">-</span>
+        </div>
+        <div class="glass-card rounded-2xl p-3.5 sm:p-6 flex flex-col justify-between border-l-4 border-l-brand-primary">
+            <span class="text-[9px] min-[380px]:text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Automation Score</span>
+            <div class="flex items-baseline gap-1">
+                <span id="res-score" class="text-base min-[380px]:text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-brand-primary">-</span>
+                <span class="text-[9px] sm:text-xs text-gray-500 font-bold">/100</span>
+            </div>
+        </div>
+        <div class="glass-card rounded-2xl p-3.5 sm:p-6 flex flex-col justify-between border-l-4 border-l-yellow-500">
+            <span class="text-[9px] min-[380px]:text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Hours Wasted / Mo</span>
+            <span id="res-hours-wasted" class="text-sm min-[380px]:text-base sm:text-xl lg:text-2xl xl:text-3xl font-black text-yellow-500">-</span>
+        </div>
+        <div class="glass-card rounded-2xl p-3.5 sm:p-6 flex flex-col justify-between border-l-4 border-l-red-500">
+            <span class="text-[9px] min-[380px]:text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Money Lost / Mo</span>
+            <span id="res-money-lost" class="text-sm min-[380px]:text-base sm:text-xl lg:text-2xl xl:text-3xl font-black text-red-500">-</span>
+        </div>
     </div>
 
-    <!-- Automation & Business Plan (Full Width / Long) -->
-    <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/50 border-2 relative overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.1)]">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary opacity-15 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
-        <div class="relative z-10 mb-8 text-center sm:text-left">
-            <div class="inline-block mb-4 px-4 py-1.5 rounded-full border border-brand-primary/40 bg-brand-primary/10 text-brand-primary text-xs font-bold uppercase tracking-widest shadow-sm">
-                Deep Audit Strategy
+    <!-- Layout Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+        
+        <!-- Left Column: Business Summary (Configured with sticky sidebar positioning and stretched alignment overrides) -->
+        <div class="xl:col-span-1 xl:sticky xl:top-24 self-start flex flex-col gap-6 sm:gap-8">
+            <div class="glass-card rounded-3xl p-5 sm:p-8 flex flex-col">
+                <h3 class="text-base sm:text-xl font-bold mb-5 flex items-center gap-3 text-white">
+                    <div class="p-2 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner">
+                        <i class="fas fa-chart-pie text-xs sm:text-base"></i>
+                    </div>
+                    Business Summary
+                </h3>
+                <p id="res-summary" class="text-gray-300 leading-relaxed text-xs sm:text-base"></p>
             </div>
-            <h3 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold flex flex-col sm:flex-row items-center sm:justify-start gap-3 text-white mb-4 tracking-tight">
-                <i class="fas fa-robot text-brand-primary"></i> Automation & Business Plan
-            </h3>
         </div>
-        <div id="res-automation" class="space-y-6 relative z-10"></div>
-        <div class="mt-10 text-center relative z-10">
-            <a href="https://neeura.ai/" target="_blank" class="inline-block bg-white text-black hover:bg-gray-200 font-extrabold py-4 px-8 sm:px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 text-sm sm:text-lg w-full sm:w-auto">
-                Discuss Implementation with Neeura.ai <i class="fas fa-arrow-right ml-2"></i>
-            </a>
+        
+        <!-- Right Column: Interactive Accordion Sections -->
+        <div class="xl:col-span-2 flex flex-col gap-6 sm:gap-8">
+            
+            <!-- Issues & Bottlenecks Card -->
+            <div class="glass-card rounded-3xl p-5 sm:p-8">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-base sm:text-xl font-bold flex items-center gap-3 text-white">
+                        <div class="p-2 bg-red-500/20 rounded-xl text-red-400 shadow-inner">
+                            <i class="fas fa-exclamation-triangle text-xs sm:text-base"></i>
+                        </div>
+                        Issues & Bottlenecks
+                    </h3>
+                </div>
+                
+                <div id="res-issues-accordion" class="space-y-3"></div>
+            </div>
+
+            <!-- Strategy Planning Section -->
+            <div class="glass-card rounded-3xl p-5 sm:p-8 border-brand-primary/30 border relative overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.05)]">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary opacity-5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
+                
+                <div class="relative z-10 mb-6 text-left">
+                    <div class="inline-block mb-3 px-3 py-1 rounded-full border border-brand-primary/40 bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest">
+                        Deep Audit Strategy
+                    </div>
+                    <h3 class="text-lg sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                        <i class="fas fa-robot text-brand-primary text-base sm:text-2xl"></i> Automation & Business Plan
+                    </h3>
+                </div>
+                
+                <div id="res-automation-accordion" class="space-y-4 relative z-10"></div>
+                
+                <div class="mt-10 text-center relative z-10">
+                    <a href="https://neeura.ai/" target="_blank" class="inline-block bg-white text-black hover:bg-gray-200 font-extrabold py-4 px-8 sm:px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-[1.02] text-xs sm:text-base w-full sm:w-auto">
+                        Discuss Implementation with Neeura.ai <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+            
         </div>
     </div>
 </div>
@@ -222,19 +182,13 @@
     const urlInput = document.getElementById('url-input');
     const errorContainer = document.getElementById('error-container');
 
-    // --- Improved input handling: no forced "https://" on focus, just trim on input/paste ---
     urlInput.addEventListener('input', function() {
-        // Automatically trim any leading/trailing whitespace when the user types or pastes
         this.value = this.value.trim();
     });
 
-    // Hide error when user starts editing again
     urlInput.addEventListener('focus', function() {
         errorContainer.classList.add('hidden');
     });
-
-    // No blur handler that wipes the field – the placeholder is enough,
-    // and the submit handler will fix missing schemes.
 
     window.resetAudit = function() {
         const resultsSection = document.getElementById('results-section');
@@ -277,13 +231,32 @@
         setTimeout(() => { urlInput.focus(); }, 300);
     };
 
-    // ... rest of the stepper, error, submit, and rendering functions remain exactly the same ...
-    // (keeping them identical to your original, they are long but unchanged)
-    function updateStepper(step, message) {
+    window.updateStepper = function(step, message) {
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
         const headerStepperMobileText = document.getElementById('header-stepper-mobile-text');
         const statusMsg = document.getElementById('stepper-status-msg');
+        const progressBar = document.getElementById('top-progress-bar');
+        
+        const stepWidths = {
+            submit: '20%',
+            discover: '40%',
+            scrape: '60%',
+            analyze: '80%',
+            complete: '100%',
+            ready: '100%'
+        };
+
+        if (progressBar && stepWidths[step]) {
+            progressBar.style.width = stepWidths[step];
+            if (step === 'complete' || step === 'ready') {
+                setTimeout(() => {
+                    progressBar.style.opacity = '0';
+                }, 800);
+            } else {
+                progressBar.style.opacity = '1';
+            }
+        }
         
         if (statusMsg && message) {
             statusMsg.textContent = message;
@@ -306,13 +279,14 @@
         const currentIdx = steps.indexOf(step);
         if (currentIdx === -1) return;
 
+        // Simplified step status label indicators on mobile viewports for cleaner screen allocation
         if (headerStepperMobileText) {
             const labels = {
-                submit: '1/5: Submitting',
-                discover: '2/5: Discovering',
-                scrape: '3/5: Scraping',
-                analyze: '4/5: Analyzing',
-                complete: '5/5: Compiling'
+                submit: 'Step 1/5',
+                discover: 'Step 2/5',
+                scrape: 'Step 3/5',
+                analyze: 'Step 4/5',
+                complete: 'Step 5/5'
             };
             headerStepperMobileText.textContent = labels[step] || `Step ${currentIdx + 1}/5`;
         }
@@ -363,7 +337,36 @@
                 if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
             }
         });
-    }
+    };
+
+    // Generic accordion toggle logic (Closes adjacent panels automatically for dynamic scrolling)
+    window.toggleAccordion = function(id) {
+        const body = document.getElementById(id);
+        const icon = document.getElementById(id + '-icon');
+        if (!body) return;
+
+        if (body.classList.contains('max-h-0')) {
+            const parent = body.closest('.space-y-3') || body.closest('.space-y-4');
+            if (parent) {
+                parent.querySelectorAll('[id$="-body"]').forEach(el => {
+                    if (el !== body && !el.classList.contains('max-h-0')) {
+                        el.classList.add('max-h-0', 'opacity-0');
+                        el.classList.remove('max-h-[1000px]', 'opacity-100', 'mt-4');
+                        const otherIcon = document.getElementById(el.id.replace('-body', '-icon'));
+                        if (otherIcon) otherIcon.classList.remove('rotate-180');
+                    }
+                });
+            }
+
+            body.classList.remove('max-h-0', 'opacity-0');
+            body.classList.add('max-h-[1000px]', 'opacity-100', 'mt-4');
+            if (icon) icon.classList.add('rotate-180');
+        } else {
+            body.classList.add('max-h-0', 'opacity-0');
+            body.classList.remove('max-h-[1000px]', 'opacity-100', 'mt-4');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+    };
 
     function handleAuditError(errorMsg, suggestion = "Please verify your configuration and try again.") {
         const submitBtn = document.getElementById('submit-btn');
@@ -503,62 +506,100 @@
             const scoreEl = document.getElementById('res-score');
             scoreEl.textContent = data.automation_score;
             if (data.automation_score < 40) {
-                scoreEl.className = "text-xl sm:text-2xl lg:text-3xl font-black text-red-500";
+                scoreEl.className = "text-base min-[380px]:text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-red-500";
             } else if (data.automation_score < 75) {
-                scoreEl.className = "text-xl sm:text-2xl lg:text-3xl font-black text-yellow-500";
+                scoreEl.className = "text-base min-[380px]:text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-yellow-500";
             } else {
-                scoreEl.className = "text-xl sm:text-2xl lg:text-3xl font-black text-brand-primary";
+                scoreEl.className = "text-base min-[380px]:text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-brand-primary";
             }
 
             document.getElementById('res-summary').textContent = data.business_summary;
 
-            const autoList = document.getElementById('res-automation');
-            autoList.innerHTML = data.automation_opportunities.map((a, index) => `
-                <div class="relative pl-8 sm:pl-10 group">
-                    <div class="absolute left-0 top-0 bottom-0 flex flex-col items-center">
-                        <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-brand-primary border-2 border-brand-bg z-10 mt-1 group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(14,165,233,0.5)]"></div>
-                        ${index < data.automation_opportunities.length - 1 ? '<div class="w-0.5 flex-1 bg-brand-border group-hover:bg-brand-primary/50 transition-colors"></div>' : ''}
-                    </div>
-                    <div class="bg-black/40 border border-brand-border rounded-2xl p-5 sm:p-6 hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all ml-2">
-                        <h4 class="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-brand-primary transition-colors">${a.opportunity}</h4>
-                        
-                        <!-- Tech Details Badge Row -->
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <span class="text-[10px] sm:text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary">
-                                <i class="fas fa-tools mr-1.5"></i> Stack: ${a.tools}
-                            </span>
-                            <span class="text-[10px] sm:text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent">
-                                <i class="fas fa-hourglass-half mr-1.5"></i> Saved: ${a.time_saved}
-                            </span>
-                            <span class="text-[10px] sm:text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-brand-secondary/10 border border-brand-secondary/20 text-brand-secondary">
-                                <i class="fas fa-calendar-alt mr-1.5"></i> Timeline: ${a.implementation_time}
-                            </span>
-                        </div>
-                        
-                        <p class="text-gray-400 text-sm sm:text-base leading-relaxed">${a.impact}</p>
-                    </div>
-                </div>
-            `).join('');
-            
-            const issuesList = document.getElementById('res-issues');
-            issuesList.innerHTML = data.issues.map(i => {
+            // Render Accordion-Style Issues & Bottlenecks (Protected with bounds to avoid overlapping arrows at 320px-440px widths)
+            const issuesAccordion = document.getElementById('res-issues-accordion');
+            issuesAccordion.innerHTML = data.issues.map((issue, index) => {
                 let borderCol = "border-l-red-500/60";
                 let labelCol = "text-red-400 bg-red-500/10 border-red-500/20";
-                if (i.severity === 'high') {
+                
+                if (issue.severity === 'high') {
                     borderCol = "border-l-orange-500/60";
                     labelCol = "text-orange-400 bg-orange-500/10 border-orange-500/20";
-                } else if (i.severity === 'medium') {
+                } else if (issue.severity === 'medium') {
                     borderCol = "border-l-yellow-500/60";
                     labelCol = "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
                 }
+
+                const uniqueId = `issue-${index}`;
+                
                 return `
-                    <li class="bg-black/40 p-4 sm:p-5 rounded-xl border border-brand-border border-l-4 ${borderCol} hover:bg-white/[0.01] transition-all">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-400">${i.type}</span>
-                            <span class="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 border rounded-md ${labelCol}">${i.severity}</span>
+                    <div class="bg-black/40 rounded-xl border border-brand-border border-l-4 ${borderCol} hover:bg-white/[0.01] transition-all duration-300">
+                        <!-- Accordion Header Trigger (Responsive padding/margins and max-widths) -->
+                        <div onclick="window.toggleAccordion('${uniqueId}-body')" class="flex items-center justify-between p-3.5 sm:p-5 cursor-pointer select-none">
+                            <div class="flex flex-col gap-1 pr-2 max-w-[85%]">
+                                <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-400 break-words">${issue.type}</span>
+                                <span class="text-[9px] min-[380px]:text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 border rounded-md ${labelCol} self-start mt-1">${issue.severity}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i id="${uniqueId}-body-icon" class="fas fa-chevron-down text-gray-500 transition-transform duration-300"></i>
+                            </div>
                         </div>
-                        <p class="text-gray-300 text-sm sm:text-base leading-relaxed">${i.description}</p>
-                    </li>
+                        <!-- Accordion Content Panel -->
+                        <div id="${uniqueId}-body" class="transition-all duration-300 ease-in-out overflow-hidden max-h-0 opacity-0 px-3.5 sm:px-5 pb-5">
+                            <p class="text-gray-300 text-xs sm:text-base leading-relaxed mb-4">${issue.description}</p>
+                            <div class="bg-black/50 border border-brand-border/40 rounded-xl p-3 mt-2">
+                                <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-brand-primary block mb-1.5"><i class="fas fa-lightbulb mr-1.5"></i>Recommended Action</span>
+                                <p class="text-[11px] sm:text-sm text-gray-400 leading-relaxed">${issue.recommendation || 'Upgrade automation architecture, verify endpoint validation parameters, and streamline workflow schedules.'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render Accordion-Style Automation Strategy Plan
+            const strategyAccordion = document.getElementById('res-automation-accordion');
+            strategyAccordion.innerHTML = data.automation_opportunities.map((opt, index) => {
+                const uniqueId = `opt-${index}`;
+                
+                return `
+                    <div class="bg-black/40 border border-brand-border rounded-2xl transition-all duration-300 overflow-hidden hover:border-brand-primary/40">
+                        <!-- Accordion Header Trigger (Secured layout parameters at 320px) -->
+                        <div onclick="window.toggleAccordion('${uniqueId}-body')" class="p-4 sm:p-6 cursor-pointer select-none flex items-start justify-between gap-3">
+                            <div class="flex-grow max-w-[85%]">
+                                <h4 class="text-sm sm:text-lg font-bold text-white mb-2 tracking-tight group-hover:text-brand-primary transition-colors break-words">${opt.opportunity}</h4>
+                                
+                                <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                                    <span class="text-[9px] sm:text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary">
+                                        Stack: ${opt.tools}
+                                    </span>
+                                    <span class="text-[9px] sm:text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent">
+                                        Saved: ${opt.time_saved}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 pt-0.5">
+                                <i id="${uniqueId}-body-icon" class="fas fa-chevron-down text-brand-primary transition-transform duration-300"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="${uniqueId}-body" class="transition-all duration-300 ease-in-out overflow-hidden max-h-0 opacity-0 px-4 sm:px-6 pb-5 border-t border-brand-border/30 bg-black/20">
+                            <div class="space-y-4 pt-4">
+                                <div>
+                                    <span class="text-[9px] font-mono font-bold uppercase tracking-wider text-gray-500 block mb-1">Strategic Goal / Impact</span>
+                                    <p class="text-gray-300 text-xs sm:text-base leading-relaxed">${opt.impact}</p>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                    <div class="bg-brand-bg/50 rounded-xl p-3 border border-brand-border">
+                                        <span class="text-[9px] font-mono font-bold text-gray-500 uppercase block mb-1">Implementation Window</span>
+                                        <span class="text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5"><i class="fas fa-clock text-brand-secondary text-[11px] sm:text-xs"></i> ${opt.implementation_time}</span>
+                                    </div>
+                                    <div class="bg-brand-bg/50 rounded-xl p-3 border border-brand-border">
+                                        <span class="text-[9px] font-mono font-bold text-gray-500 uppercase block mb-1">Target Metric</span>
+                                        <span class="text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5"><i class="fas fa-chart-line text-brand-accent text-[11px] sm:text-xs"></i> High ROI Automation</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
             }).join('');
             
