@@ -1,6 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
+{# ===== HEADER STEPPER (desktop) ===== #}
+<div id="header-stepper" class="fixed top-0 left-0 right-0 z-50 flex justify-center items-center gap-2 py-3 px-4 bg-brand-bg/95 backdrop-blur-md border-b border-brand-border transition-all duration-500 opacity-0 translate-y-[-10px]" style="display:none;">
+    <div id="h-step-submit" class="flex items-center gap-1 opacity-30">
+        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-paper-plane text-[8px]"></i></div>
+        <span class="text-gray-400 hidden lg:inline">Submit</span>
+    </div>
+    <div id="h-line-1" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
+    <div id="h-step-discover" class="flex items-center gap-1 opacity-30">
+        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-sitemap text-[8px]"></i></div>
+        <span class="text-gray-400 hidden lg:inline">Discover</span>
+    </div>
+    <div id="h-line-2" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
+    <div id="h-step-scrape" class="flex items-center gap-1 opacity-30">
+        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-file-alt text-[8px]"></i></div>
+        <span class="text-gray-400 hidden lg:inline">Scrape</span>
+    </div>
+    <div id="h-line-3" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
+    <div id="h-step-analyze" class="flex items-center gap-1 opacity-30">
+        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-robot text-[8px]"></i></div>
+        <span class="text-gray-400 hidden lg:inline">Analyze</span>
+    </div>
+    <div id="h-line-4" class="w-6 lg:w-8 h-[2px] bg-brand-border"></div>
+    <div id="h-step-ready" class="flex items-center gap-1 opacity-30">
+        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px]"><i class="fas fa-flag-checkered text-[8px]"></i></div>
+        <span class="text-gray-400 hidden lg:inline">Complete</span>
+    </div>
+</div>
+
+{# ===== HEADER STEPPER (mobile) ===== #}
+<div id="header-stepper-mobile" class="fixed top-0 left-0 right-0 z-50 bg-brand-bg/95 backdrop-blur-md border-b border-brand-border px-4 py-2 text-center transition-all duration-500 opacity-0" style="display:none;">
+    <span id="header-stepper-mobile-text" class="text-brand-primary font-mono text-xs font-bold">1/5: Submitting</span>
+</div>
+
+{# ===== FLOATING NEW AUDIT BUTTON ===== #}
+<button id="fresh-start-btn" class="hidden fixed bottom-6 right-6 z-50 bg-brand-primary text-white rounded-full p-4 shadow-lg hover:bg-brand-secondary transition-all" onclick="resetAudit()" title="New Audit">
+    <i class="fas fa-redo"></i>
+</button>
+
 <!-- Hero Section -->
 <div id="hero-wrapper" class="text-center py-10 sm:py-16 px-4 mb-2">
     <div class="inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mb-8 text-xs font-mono tracking-wider uppercase text-gray-500">
@@ -77,35 +115,32 @@
         </div>
     </div>
     
-    <!-- Top Details Grid Skeleton -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-        <!-- Business Summary Skeleton -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse bg-white/[0.01]">
-            <div class="flex items-center gap-3 mb-5 sm:mb-6">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
-            </div>
-            <div class="space-y-3 flex-grow">
-                <div class="h-4 bg-white/10 rounded w-full"></div>
-                <div class="h-4 bg-white/10 rounded w-full"></div>
-                <div class="h-4 bg-white/10 rounded w-5/6"></div>
-                <div class="h-4 bg-white/10 rounded w-4/5"></div>
-            </div>
+    <!-- Business Summary Skeleton (Full Width) -->
+    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col animate-pulse bg-white/[0.01]">
+        <div class="flex items-center gap-3 mb-5 sm:mb-6">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+            <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
         </div>
-        <!-- Issues Skeleton -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse bg-white/[0.01]">
-            <div class="flex items-center gap-3 mb-5 sm:mb-6">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
-            </div>
-            <div class="space-y-4 flex-grow">
-                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
-            </div>
+        <div class="space-y-3 flex-grow">
+            <div class="h-4 bg-white/10 rounded w-full"></div>
+            <div class="h-4 bg-white/10 rounded w-full"></div>
+            <div class="h-4 bg-white/10 rounded w-5/6"></div>
+        </div>
+    </div>
+
+    <!-- Issues Skeleton (Full Width) -->
+    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col animate-pulse bg-white/[0.01]">
+        <div class="flex items-center gap-3 mb-5 sm:mb-6">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+            <div class="h-6 sm:h-8 bg-white/10 rounded w-1/3"></div>
+        </div>
+        <div class="space-y-4 flex-grow">
+            <div class="h-16 bg-white/10 rounded-xl w-full"></div>
+            <div class="h-16 bg-white/10 rounded-xl w-full"></div>
         </div>
     </div>
     
-    <!-- Middle Section: Automation Plan Skeleton -->
+    <!-- Automation Plan Skeleton -->
     <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/20 border-2 animate-pulse bg-white/[0.01]">
         <div class="mb-8 text-center sm:text-left">
             <div class="h-6 bg-white/10 rounded-full w-48 mb-4 mx-auto sm:mx-0"></div>
@@ -143,28 +178,25 @@
         </div>
     </div>
 
-    <!-- Details Grid: Business Summary & Issues Side-by-Side -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-        <!-- Business Summary -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
-            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-                <div class="p-2 sm:p-3 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner"><i class="fas fa-chart-pie"></i></div>
-                Business Summary
-            </h3>
-            <p id="res-summary" class="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg flex-grow"></p>
-        </div>
-        
-        <!-- Issues & Bottlenecks (Moved Up) -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
-            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-                <div class="p-2 sm:p-3 bg-red-500/20 rounded-xl text-red-400 shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
-                Issues & Bottlenecks
-            </h3>
-            <ul id="res-issues" class="grid grid-cols-1 gap-4 overflow-y-auto max-h-[450px] custom-scrollbar pr-2"></ul>
-        </div>
+    <!-- Business Summary (Full Width / Long) -->
+    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
+        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
+            <div class="p-2 sm:p-3 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner"><i class="fas fa-chart-pie"></i></div>
+            Business Summary
+        </h3>
+        <p id="res-summary" class="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg"></p>
+    </div>
+    
+    <!-- Issues & Bottlenecks (Full Width / Long, Stacked Below Summary) -->
+    <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
+        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
+            <div class="p-2 sm:p-3 bg-red-500/20 rounded-xl text-red-400 shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
+            Issues & Bottlenecks
+        </h3>
+        <ul id="res-issues" class="grid grid-cols-1 gap-4"></ul>
     </div>
 
-    <!-- Automation & Business Plan -->
+    <!-- Automation & Business Plan (Full Width / Long) -->
     <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/50 border-2 relative overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.1)]">
         <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary opacity-15 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
         <div class="relative z-10 mb-8 text-center sm:text-left">

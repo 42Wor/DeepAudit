@@ -18,16 +18,32 @@ def run_audit():
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
         
-    def generate_dummy_stream():
-        yield f"data: {json.dumps({'step': 'discover', 'message': 'Searching for public sitemaps and crawling domain routes...'})}\n\n"
-        time.sleep(1.2)
+    def generate_cool_stream():
+        # Step 0: Start
+        yield f"data: {json.dumps({'step': 'start', 'message': '🚀 Deep Audit initiated', 'progress': 0})}\n\n"
+        time.sleep(0.2)
         
-        yield f"data: {json.dumps({'step': 'scrape', 'message': 'Discovered 6 pages. Scraping text content and filtering code blocks...'})}\n\n"
-        time.sleep(1.2)
+        # Step 1: Discover pages (25%)
+        yield f"data: {json.dumps({'step': 'discover', 'message': '🔍 25% – Scanning for sitemaps & public routes...', 'progress': 25})}\n\n"
+        time.sleep(0.2)
         
-        yield f"data: {json.dumps({'step': 'analyze', 'message': 'Sending payload to Gemini for structured audit and analysis...'})}\n\n"
-        time.sleep(1.2)
+        # Dummy discovery result
+        yield f"data: {json.dumps({'step': 'discover', 'message': '📄 25% – Found 6 public pages!', 'progress': 25, 'pagesFound': 6})}\n\n"
+        time.sleep(0.3)
         
+        # Step 2: Scrape content (50%)
+        yield f"data: {json.dumps({'step': 'scrape', 'message': '📥 50% – Fetching and scraping page content...', 'progress': 50})}\n\n"
+        time.sleep(0.2)
+        
+        dummy_char_count = 18420
+        yield f"data: {json.dumps({'step': 'scrape', 'message': f'✨ 50% – Scraped {dummy_char_count:,} characters from 6 pages.', 'progress': 50, 'characters': dummy_char_count})}\n\n"
+        time.sleep(0.3)
+        
+        # Step 3: AI analysis (75%)
+        yield f"data: {json.dumps({'step': 'analyze', 'message': '🧠 75% – Running Neeura AI structured audit...', 'progress': 75})}\n\n"
+        time.sleep(0.5)  # simulate processing
+        
+        # Dummy audit data (cleaned up – no duplicates)
         dummy_data = {
             "detected_industry": "professional_services",
             "automation_score": 45,
@@ -69,10 +85,21 @@ def run_audit():
             ]
         }
         
-        yield f"data: {json.dumps({'step': 'complete', 'message': 'Audit compiled successfully!', 'data': dummy_data})}\n\n"
-
-    return Response(generate_dummy_stream(), mimetype="text/event-stream")
+        # Add a cool summary to the report
+        dummy_data["audit_summary"] = {
+            "audited_url": url,
+            "pages_analyzed": 6,
+            "total_characters": dummy_char_count,
+            "report_version": "Deep Audit v2.0 (dummy)",
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+        }
+        
+        # Step 4: Complete (100%)
+        yield f"data: {json.dumps({'step': 'complete', 'message': '🎉 100% – Audit complete! Here’s your report.', 'progress': 100, 'data': dummy_data})}\n\n"
+        
+    return Response(generate_cool_stream(), mimetype="text/event-stream")
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
+    print(f"🚀 Starting Deep Audit (cool dummy version) on port {port}...")
     app.run(host="0.0.0.0", port=port, debug=True)
