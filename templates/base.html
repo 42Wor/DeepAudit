@@ -6,7 +6,7 @@
     <title>DeepAudit - AI Auditor</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='8' fill='rgba(14, 165, 233, 0.1)' stroke='rgba(14, 165, 233, 0.4)' stroke-width='1.5'/%3E%3Cpolygon points='16,16 25,20.5 16,25 7,20.5' fill='%230ea5e9' opacity='0.4'/%3E%3Cpolygon points='16,11 25,15.5 16,20 7,15.5' fill='%230ea5e9' opacity='0.7'/%3E%3Cpolygon points='16,6 25,10.5 16,15 7,10.5' fill='%230ea5e9'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome 6 for the new X logo -->
+    <!-- FontAwesome 6 for iconography -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -51,7 +51,7 @@
             background-color: #09090b; 
             color: #fafafa; 
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            /* High-tech grid background for wide screens */
+            /* Grid background overlay */
             background-image: 
                 radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -100,7 +100,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #52525b;
         }
-        /* Smooth transition for hiding hero */
         #hero-wrapper {
             transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             transform-origin: top;
@@ -117,11 +116,11 @@
 </head>
 <body>
 
-    <!-- Simple Header -->
+    <!-- Header Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass-nav w-full">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 sm:h-20">
-                <!-- Fake Logo -->
+                <!-- Left Logo block -->
                 <div class="flex-shrink-0">
                     <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <div class="w-8 h-8 sm:w-10 sm:h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
@@ -133,7 +132,60 @@
                     </a>
                 </div>
                 
-                <!-- Fresh Start Button (Hidden by default) -->
+                <!-- Center: Compact Real-Time Header Stepper (Desktop) -->
+                <div class="hidden md:flex items-center gap-3 bg-black/50 border border-brand-border/80 rounded-full px-4 py-1.5" id="header-stepper" style="display: none;">
+                    <!-- Step 1: Submit -->
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold" id="h-step-submit">
+                        <div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-[0_0_8px_rgba(14,165,233,0.4)] transition-all duration-300 text-[10px]">
+                            <i class="fas fa-paper-plane text-[8px]"></i>
+                        </div>
+                        <span class="text-brand-primary hidden lg:inline">Submit</span>
+                    </div>
+                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-1"></div>
+                    
+                    <!-- Step 2: Discover -->
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-discover">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                            <i class="fas fa-sitemap text-[8px]"></i>
+                        </div>
+                        <span class="text-gray-400 hidden lg:inline">Discover</span>
+                    </div>
+                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-2"></div>
+                    
+                    <!-- Step 3: Scrape -->
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-scrape">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                            <i class="fas fa-file-alt text-[8px]"></i>
+                        </div>
+                        <span class="text-gray-400 hidden lg:inline">Scrape</span>
+                    </div>
+                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-3"></div>
+                    
+                    <!-- Step 4: Analyze -->
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-analyze">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                            <i class="fas fa-robot text-[8px]"></i>
+                        </div>
+                        <span class="text-gray-400 hidden lg:inline">Analyze</span>
+                    </div>
+                    <div class="w-4 h-[1px] bg-brand-border transition-all duration-300" id="h-line-4"></div>
+                    
+                    <!-- Step 5: Ready -->
+                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30" id="h-step-ready">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-300 text-[10px]">
+                            <i class="fas fa-flag-checkered text-[8px]"></i>
+                        </div>
+                        <span class="text-gray-400 hidden lg:inline">Ready</span>
+                    </div>
+                </div>
+
+                <!-- Center: Compact Dynamic Mobile Status Pill -->
+                <div class="flex md:hidden items-center bg-brand-primary/10 border border-brand-primary/30 rounded-full px-3 py-1 text-[11px] font-mono font-bold text-brand-primary gap-1.5 animate-pulse" id="header-stepper-mobile" style="display: none;">
+                    <i class="fas fa-spinner fa-spin text-[10px]"></i>
+                    <span id="header-stepper-mobile-text">Step 1/5</span>
+                </div>
+                
+                <!-- Right Fresh Start control -->
                 <div>
                     <button id="fresh-start-btn" onclick="if(window.resetAudit) window.resetAudit()" class="hidden bg-brand-primary/10 border border-brand-primary/50 text-brand-primary hover:bg-brand-primary hover:text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(14,165,233,0.15)] flex items-center gap-2">
                         <i class="fas fa-redo-alt"></i> <span class="hidden sm:inline">Fresh Start</span>
@@ -143,7 +195,7 @@
         </div>
     </nav>
 
-    <!-- Main Content Block -->
+    <!-- Main Content Container -->
     <main class="flex-grow w-full max-w-[1600px] mx-auto transition-all duration-500 pt-24 sm:pt-32 px-4 sm:px-6 md:px-8">
         {% block content %}{% endblock %}
     </main>
@@ -153,7 +205,6 @@
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8">
                 
-                <!-- Column 1: Brand Info -->
                 <div class="flex flex-col items-center md:items-start text-center md:text-left">
                     <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity mb-4">
                         <div class="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
@@ -168,7 +219,6 @@
                     </p>
                 </div>
                 
-                <!-- Column 2: Resources & Links -->
                 <div class="flex flex-col items-center md:items-start text-center md:text-left">
                     <h4 class="text-white font-bold mb-5 text-lg tracking-wide">Resources</h4>
                     <ul class="space-y-3 text-sm text-gray-400">
@@ -178,14 +228,12 @@
                     </ul>
                 </div>
 
-                <!-- Column 3: Developer & Socials -->
                 <div class="flex flex-col items-center md:items-start text-center md:text-left">
                     <h4 class="text-white font-bold mb-5 text-lg tracking-wide">Developer</h4>
                     <p class="text-gray-400 text-sm mb-4">
                         Developed by <span class="font-bold text-white">Maaz Waheed</span>
                     </p>
                     
-                    <!-- Social Media Icons -->
                     <div class="flex gap-5 text-gray-400 text-xl">
                         <a href="https://www.facebook.com/profile.php?id=61550243033527" target="_blank" class="hover:text-[#1877F2] transition-colors hover:scale-110 transform duration-200" title="Facebook">
                             <i class="fab fa-facebook-f"></i>
@@ -204,7 +252,6 @@
                 
             </div>
             
-            <!-- Bottom Bar -->
             <div class="mt-12 pt-8 border-t border-brand-border flex flex-col md:flex-row justify-between items-center gap-4">
                 <p class="text-gray-500 text-sm">
                     &copy; 2026 DeepAudit. All rights reserved.
@@ -219,7 +266,6 @@
         </div>
     </footer>
 
-    <!-- Scripts Block -->
     {% block scripts %}{% endblock %}
 </body>
 </html>
