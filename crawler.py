@@ -360,7 +360,7 @@ def scrape_page(url: str, client: httpx.Client = _SHARED_CLIENT) -> str:
 # ---------------------------------------------------------------------------
 
 def scrape_pages_with_limit(urls: List[str], client: httpx.Client = _SHARED_CLIENT) -> List[str]:
-    token_limit = random.randint(25000, 50000)
+    token_limit = random.randint(50000, 80000)
     print(f"   [Limit] Dynamic token limit initialized: {token_limit} tokens.")
 
     # Scrape all pages in parallel using the pooled connection pool
