@@ -276,7 +276,53 @@ def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx
     # OVERRIDE: Force max_discovery to 20 to ignore legacy limits passed from app.py
     max_discovery = 20
     
-    base_domain = urlparse(start_url).netloc
+    # 1. EARLY TARGET VALIDATION GATEWAY
+    # Before starting expensive crawling routines, verify if the domain is correctly formatted, online, and accessible.
+    parsed_start = urlparse(start_url)
+    if not parsed_start.netloc or parsed_start.scheme not in ('http', 'https'):
+        raise ValueError("Invalid URL structure. Please enter a fully-qualified web address starting with http:// or https://")
+
+    print(f"   [Crawler] Verifying target website status and accessibility: {start_url}")
+    try:
+        # Ping the target's homepage with a structured GET request
+        probe_resp = client.get(start_url, timeout=4.0)
+        
+        # Explicitly handle bad HTTP response codes to prevent wasting crawling resources
+        if probe_resp.status_code >= 400:
+            if probe_resp.status_code in (401, 403):
+                raise ValueError(
+                    f"Access was forbidden by the target server (HTTP {probe_resp.status_code}). "
+                    "The website may be protected by Cloudflare, a firewall, basic auth, or is blocking automated scanners."
+                )
+            elif probe_resp.status_code == 404:
+                raise ValueError("The requested homepage returned a 404 Not Found error. Please verify the URL spelling.")
+            else:
+                raise ValueError(
+                    f"The website is currently unreachable or unstable (returned status code HTTP {probe_resp.status_code})."
+                )
+    except httpx.ConnectError:
+        raise ValueError(
+            "The website domain name could not be resolved. Please verify the spelling, "
+            "ensure it exists, or check if the website is completely offline."
+        )
+    except httpx.ConnectTimeout:
+        raise ValueError(
+            "Connection timed out. The website server is either completely offline or blocking "
+            "incoming automated requests."
+        )
+    except httpx.ReadTimeout:
+        raise ValueError(
+            "The target website server took too long to respond. It may be overloaded or currently experiencing downtime."
+        )
+    except httpx.RequestError as re:
+        raise ValueError(f"A network transmission failure occurred while verifying the website: {str(re)}")
+    except ValueError as val_err:
+        raise val_err  # Re-raise descriptive ValueErrors directly
+    except Exception as exc:
+        raise ValueError(f"An unexpected system exception occurred while validating the target: {str(exc)}")
+
+    # 2. PROCEED TO HYBRID CRAWL AFTER SUCCESSFUL HEALTH PROBE
+    base_domain = parsed_start.netloc
     normalized_start = normalize_url(start_url)
 
     print(f"   [Crawler] Searching for up to {max_discovery} public URLs via Sitemap sources...")
@@ -295,7 +341,7 @@ def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx
 
     unique_urls = list(dict.fromkeys(discovered))
 
-    # Verify all URLs are alive (200) in parallel using the pooled client
+    # Verify all discovered URLs are alive (200) in parallel using the pooled client
     print("   [Crawler] Verifying page statuses (parallel)...")
     verified = []
 
@@ -322,6 +368,13 @@ def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx
                 verified.append(url)
                 if len(verified) >= max_discovery:
                     break
+
+    # If the check passed but absolutely no internal pages were found
+    if not verified:
+        raise ValueError(
+            "The website domain is online, but our crawler could not find any accessible "
+            "internal pages or sitemaps to audit."
+        )
 
     return verified
 

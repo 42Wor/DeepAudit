@@ -23,7 +23,7 @@
     <form id="audit-form" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div class="relative flex-grow">
             <i class="fas fa-globe absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
-            <input type="url" id="url-input" required placeholder="https://yourwebsite.com" 
+            <input type="text" id="url-input" required placeholder="https://yourwebsite.com" 
                    class="w-full bg-black/40 border border-brand-border rounded-xl py-4 pl-12 pr-4 text-base lg:text-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner">
         </div>
         <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-all flex items-center justify-center gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-base lg:text-lg">
@@ -172,9 +172,23 @@
 
 {% block scripts %}
 <script>
+    // UX Helper: Pre-fill input with https:// on focus
+    const urlInput = document.getElementById('url-input');
+    
+    urlInput.addEventListener('focus', function() {
+        if (!this.value.trim()) {
+            this.value = 'https://';
+        }
+    });
+
+    urlInput.addEventListener('blur', function() {
+        if (this.value.trim() === 'https://' || this.value.trim() === 'http://') {
+            this.value = '';
+        }
+    });
+
     // System Reset Functionality
     window.resetAudit = function() {
-        const urlInput = document.getElementById('url-input');
         const resultsSection = document.getElementById('results-section');
         const skeletonState = document.getElementById('skeleton-state');
         const heroWrapper = document.getElementById('hero-wrapper');
@@ -332,7 +346,14 @@
     document.getElementById('audit-form').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const url = document.getElementById('url-input').value;
+        let url = document.getElementById('url-input').value.trim();
+        
+        // Auto-fix URL formatting if http/https prefix is missing
+        if (url && !/^https?:\/\//i.test(url)) {
+            url = 'https://' + url;
+            document.getElementById('url-input').value = url; // Update input field value
+        }
+        
         const submitBtn = document.getElementById('submit-btn');
         const skeletonState = document.getElementById('skeleton-state');
         const resultsSection = document.getElementById('results-section');

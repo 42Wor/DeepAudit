@@ -62,7 +62,7 @@ def run_audit():
             combined_text = "\n".join(scraped_data_list)
             
             # Step 4: AI Analysis
-            yield f"data: {json.dumps({'step': 'analyze', 'message': f'Scraped {len(combined_text)} characters. Running Gemini AI structured audit...'})}\n\n"
+            yield f"data: {json.dumps({'step': 'analyze', 'message': f'Scraped {len(combined_text)} characters. Running neeura AI structured audit...'})}\n\n"
             audit_report = run_ai_audit(url, combined_text)
             
             # Attach scanned pages to the final report
