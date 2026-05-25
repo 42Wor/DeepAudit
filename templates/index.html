@@ -89,15 +89,18 @@
         </div>
 
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 animate-pulse">
-            <div class="flex items-center gap-3 mb-5 sm:mb-6">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
+            <div class="flex items-center justify-between mb-5 sm:mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
+                    <div class="h-6 sm:h-8 bg-white/10 rounded w-32"></div>
+                </div>
+                <div class="w-16 h-6 bg-white/10 rounded-full"></div>
             </div>
-            <div class="flex flex-wrap gap-2 sm:gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 sm:pr-4">
-                <div class="h-10 bg-white/10 rounded-xl w-24"></div>
-                <div class="h-10 bg-white/10 rounded-xl w-32"></div>
-                <div class="h-10 bg-white/10 rounded-xl w-20"></div>
-                <div class="h-10 bg-white/10 rounded-xl w-28"></div>
+            <div class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 sm:pr-4">
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
             </div>
         </div>
     </div>
@@ -165,13 +168,16 @@
             <ul id="res-issues" class="grid grid-cols-1 gap-4"></ul>
         </div>
 
-        <!-- Scanned Pages (Chip Design) -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10">
-            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-                <div class="p-2 sm:p-3 bg-brand-secondary/20 rounded-xl text-brand-secondary shadow-inner"><i class="fas fa-sitemap"></i></div>
-                Scanned Pages
-            </h3>
-            <ul id="res-pages" class="flex flex-wrap gap-2 sm:gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 sm:pr-4">
+        <!-- Scanned Pages (Sleek Route List) -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
+            <div class="flex items-center justify-between mb-5 sm:mb-6">
+                <h3 class="text-lg sm:text-xl lg:text-2xl font-bold flex items-center gap-3 text-white">
+                    <div class="p-2 sm:p-3 bg-brand-secondary/20 rounded-xl text-brand-secondary shadow-inner"><i class="fas fa-sitemap"></i></div>
+                    Scanned Pages
+                </h3>
+                <span id="res-pages-count" class="text-xs font-mono px-2.5 py-1 bg-brand-secondary/10 border border-brand-secondary/30 rounded-full text-brand-secondary font-semibold">0 Pages</span>
+            </div>
+            <ul id="res-pages" class="space-y-2.5 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 sm:pr-4 flex-grow">
                 <!-- dynamically filled -->
             </ul>
         </div>
@@ -277,23 +283,37 @@
                     </li>
                 `).join('');
 
-                // 5. Scanned Pages – chips
+                // 5. Scanned Pages – Sleek Route List
                 const pagesList = document.getElementById('res-pages');
+                const pagesCountBadge = document.getElementById('res-pages-count');
+                
+                if (pagesCountBadge) {
+                    pagesCountBadge.textContent = `${data.scanned_pages.length} Pages`;
+                }
+
                 pagesList.innerHTML = data.scanned_pages.map(p => {
                     let urlObj;
                     try { urlObj = new URL(p); } catch { urlObj = new URL('http://placeholder'); }
-                    const path = urlObj.pathname === '/' ? 'Home' : urlObj.pathname.replace(/\/$/, '');
-                    const isHome = path === 'Home';
-                    const icon = isHome ? 'fa-home' : 'fa-file-lines';
-                    const shortPath = path.length > 25 ? path.substring(0, 22) + '...' : path;
+                    const path = urlObj.pathname === '/' ? '/' : urlObj.pathname.replace(/\/$/, '');
+                    const isHome = path === '/';
+                    const shortPath = path.length > 35 ? path.substring(0, 32) + '...' : path;
+                    
                     return `
-                        <li class="group relative bg-black/40 border border-brand-border rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 flex items-center gap-3 hover:bg-brand-secondary/10 hover:border-brand-secondary/50 transition-all cursor-default"
-                            title="${p}">
-                            <i class="fas ${icon} text-brand-secondary text-sm sm:text-base flex-shrink-0"></i>
-                            <span class="text-sm sm:text-base text-gray-300 group-hover:text-white truncate max-w-[160px] sm:max-w-[200px]">${shortPath}</span>
-                            <a href="${p}" target="_blank" class="ml-auto text-gray-500 hover:text-brand-primary transition-colors text-xs sm:text-sm flex-shrink-0" title="Open page">
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
+                        <li class="group flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-brand-secondary/30 hover:bg-brand-secondary/[0.03] transition-all duration-200">
+                            <div class="flex items-center gap-3 truncate min-w-0">
+                                <span class="font-mono text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded bg-brand-secondary/10 text-brand-secondary/80 flex-shrink-0">URL</span>
+                                <span class="font-mono text-sm text-gray-300 group-hover:text-white truncate" title="${p}">${shortPath}</span>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0 ml-4 opacity-75 group-hover:opacity-100 transition-opacity">
+                                <button onclick="navigator.clipboard.writeText('${p}'); const i = this.querySelector('i'); i.className = 'fas fa-check text-green-400'; setTimeout(() => i.className = 'fas fa-copy text-xs', 1500);" 
+                                        class="text-gray-500 hover:text-white transition-colors p-1" 
+                                        title="Copy URL">
+                                    <i class="fas fa-copy text-xs"></i>
+                                </button>
+                                <a href="${p}" target="_blank" class="text-gray-500 hover:text-brand-secondary transition-colors p-1" title="Visit Page">
+                                    <i class="fas fa-external-link-alt text-xs"></i>
+                                </a>
+                            </div>
                         </li>
                     `;
                 }).join('');

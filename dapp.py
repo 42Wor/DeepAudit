@@ -46,6 +46,16 @@ def run_audit():
             "Service/Product Listings",
             "Customer Testimonials",
             "Blog & News Section",
+            "Newsletter Subscription",
+                        "Contact & Inquiry Forms",
+            "Service/Product Listings",
+            "Customer Testimonials",
+            "Blog & News Section",
+            "Newsletter Subscription",
+                        "Contact & Inquiry Forms",
+            "Service/Product Listings",
+            "Customer Testimonials",
+            "Blog & News Section",
             "Newsletter Subscription"
         ],
         "issues": [
