@@ -32,6 +32,24 @@
     </form>
 </div>
 
+<!-- Inline Error Alert Card -->
+<div id="error-container" class="hidden max-w-4xl mx-auto mb-10 animate-fade-in-up">
+    <div class="bg-red-500/10 border-2 border-red-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-5 relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-10 rounded-full blur-[50px] pointer-events-none"></div>
+        <div class="p-3 bg-red-500/20 rounded-xl text-red-400 flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-xl sm:text-2xl"></i>
+        </div>
+        <div class="space-y-2 flex-grow">
+            <h4 class="text-lg font-extrabold text-white tracking-tight" id="error-title">Audit Interrupted</h4>
+            <p class="text-gray-300 text-sm sm:text-base leading-relaxed" id="error-message"></p>
+            <div class="bg-black/30 border border-white/5 rounded-xl p-3 sm:p-4 mt-3">
+                <span class="text-xs font-mono font-bold uppercase tracking-widest text-red-400 block mb-1">Recommended Solution</span>
+                <p class="text-gray-400 text-xs sm:text-sm leading-relaxed" id="error-suggestion"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Secondary Status Log Box -->
 <div id="body-status-container" class="hidden max-w-4xl mx-auto mb-10 w-full text-center animate-fade-in-up">
     <p id="stepper-status-msg" class="text-gray-400 text-sm font-mono tracking-wide animate-pulse">Establishing stream channel...</p>
@@ -174,8 +192,11 @@
 <script>
     // UX Helper: Pre-fill input with https:// on focus
     const urlInput = document.getElementById('url-input');
+    const errorContainer = document.getElementById('error-container');
     
     urlInput.addEventListener('focus', function() {
+        // Clear past errors from screen when user goes to type again
+        errorContainer.classList.add('hidden');
         if (!this.value.trim()) {
             this.value = 'https://';
         }
@@ -211,6 +232,7 @@
         }
 
         urlInput.value = '';
+        errorContainer.classList.add('hidden');
         resultsSection.classList.add('hidden');
         resultsSection.classList.remove('opacity-100', 'flex');
         skeletonState.classList.add('hidden');
@@ -313,12 +335,14 @@
         });
     }
 
-    function handleAuditError(errorMsg, suggestion = "Please verify your parameters and try again.") {
+    // Beautiful Inline Error Handling (Overriding standard browser alert)
+    function handleAuditError(errorMsg, suggestion = "Please verify your configuration and try again.") {
         const submitBtn = document.getElementById('submit-btn');
         const skeletonState = document.getElementById('skeleton-state');
         const heroWrapper = document.getElementById('hero-wrapper');
         const bodyStatusContainer = document.getElementById('body-status-container');
         
+        // Hide Stepper Components
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
         if (headerStepper) {
@@ -332,8 +356,26 @@
             setTimeout(() => headerStepperMobile.style.display = 'none', 500);
         }
 
-        alert(`Deep Audit Failed: ${errorMsg}\n\nSuggestion: ${suggestion}`);
+        // Parse Error Message to generate smart contextual titles
+        let title = "Audit Interrupted";
+        if (errorMsg.includes("forbidden") || errorMsg.includes("403") || errorMsg.includes("Cloudflare")) {
+            title = "Access Blocked by Firewall";
+        } else if (errorMsg.includes("timeout") || errorMsg.includes("timed out")) {
+            title = "Connection Timeout";
+        } else if (errorMsg.includes("domain") || errorMsg.includes("resolve") || errorMsg.includes("exist")) {
+            title = "Host Domain Unresolved";
+        }
+
+        // Populating our modern Error Card
+        document.getElementById('error-title').textContent = title;
+        document.getElementById('error-message').textContent = errorMsg;
+        document.getElementById('error-suggestion').textContent = suggestion;
+
+        // Display the Error Container smoothly
+        errorContainer.classList.remove('hidden');
+        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
+        // Reset submit button and hide pending loaders
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
         
@@ -347,6 +389,9 @@
         e.preventDefault();
         
         let url = document.getElementById('url-input').value.trim();
+        
+        // Clear previous error messages
+        errorContainer.classList.add('hidden');
         
         // Auto-fix URL formatting if http/https prefix is missing
         if (url && !/^https?:\/\//i.test(url)) {
