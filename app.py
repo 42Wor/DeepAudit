@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
 # Import our custom modules
-from crawler import discover_public_links, scrape_page
+from crawler import discover_public_links, scrape_pages_with_limit
 from ai import run_ai_audit
 
 # Load environment variables
@@ -22,8 +22,8 @@ def run_audit():
     """
     Main audit endpoint.
     1. Validates input URL
-    2. Discovers public pages via hybrid crawler (Sitemap -> lxml BFS)
-    3. Scrapes content from discovered pages
+    2. Discovers public pages via hybrid crawler (Sitemap -> lxml BFS Depth 3)
+    3. Scrapes content with strict random token limits (1500 - 3000 tokens)
     4. Runs AI analysis on aggregated content (Currently Placeholder)
     5. Returns structured audit report to frontend
     """
@@ -43,7 +43,7 @@ def run_audit():
             
         print(f"\n🔍 Starting Deep Audit for: {url}")
         
-        # 2. Discover public pages
+        # 2. Discover public pages (Depth 3 limits & custom button scanners active)
         print("📋 Discovering public pages...")
         public_urls = discover_public_links(url, max_discovery=6)
         
@@ -55,15 +55,9 @@ def run_audit():
             
         print(f"   Found {len(public_urls)} public pages")
         
-        # 3. Scrape content from discovered pages
+        # 3. Scrape content with dynamic token limits
         print("📄 Scraping page content...")
-        scraped_data_list = []
-        
-        for i, page_url in enumerate(public_urls, 1):
-            print(f"   [{i}/{len(public_urls)}] Scraping: {page_url}")
-            text = scrape_page(page_url)
-            if text:
-                scraped_data_list.append(f"PAGE: {page_url}\nCONTENT: {text}\n---")
+        scraped_data_list = scrape_pages_with_limit(public_urls)
                 
         if not scraped_data_list:
             return jsonify({

@@ -1,5 +1,6 @@
 import re
 import time
+import random
 import xml.etree.ElementTree as ET
 from urllib.parse import urljoin, urlparse, urlunparse
 from typing import List
@@ -29,20 +30,25 @@ EXCLUDED_EXTENSIONS = (
 USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0; +https://neeura.ai/bot)'
 
 # ---------------------------------------------------------------------------
-# URL Validation & Normalization
+# URL Validation & Normalization (Fixed Vercel Trailing Slash Bug)
 # ---------------------------------------------------------------------------
 
 def normalize_url(url: str) -> str:
-    """Normalize URL by removing fragments and standardizing format consistently."""
+    """Normalize URL by removing fragments and standardizing format safely without breaking Vercel paths."""
     parsed = list(urlparse(url))
     parsed[5] = ''  # Remove fragment (#heading)
-    path = parsed[2].rstrip('/')
-    if not path:
+    
+    # Standardize empty path or root slash to avoid duplicates
+    path = parsed[2]
+    if not path or path == '/':
         path = '/'
     parsed[2] = path
+    
     parsed[0] = parsed[0].lower() # Scheme (http/https)
     parsed[1] = parsed[1].lower() # Netloc (domain)
-    return urlunparse(parsed).rstrip('/')
+    
+    # Do NOT strip trailing slashes from directories (e.g. keep /project/ as is to avoid Vercel 404s)
+    return urlunparse(parsed)
 
 def is_public_url(url: str, base_domain: str) -> bool:
     """
@@ -184,7 +190,7 @@ def parse_sitemap(sitemap_url: str, client: httpx.Client, base_domain: str, max_
     return list(dict.fromkeys(urls))
 
 # ---------------------------------------------------------------------------
-# Fallback BFS Crawler (Strictly depth-limited & interactive elements scanner)
+# Fallback BFS Crawler (Depth 3 & Interactive Element Scan)
 # ---------------------------------------------------------------------------
 
 def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List[str]:
@@ -205,6 +211,7 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List
                 continue
                 
             visited.add(current_url)
+            print(f"   [Crawl] Scanning: {current_url} (Depth: {depth}/{MAX_DEPTH})")
             
             try:
                 # Polite delay
@@ -226,30 +233,50 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List
                 tree.make_links_absolute(current_url)
                 
                 # Group for keeping track of links found on this page
-                candidate_links = []
+                standard_links = []
+                interactive_links = []
                 
                 # 1. Standard Anchor Tags
                 for link in tree.xpath('//a/@href'):
-                    candidate_links.append(link)
+                    standard_links.append(link)
                     
                 # 2. Button Interactive Elements (data-href or data-url configurations)
                 for btn_link in tree.xpath('//button/@data-href | //button/@data-url | //*[contains(@class, "btn")]/@data-href'):
-                    candidate_links.append(urljoin(current_url, btn_link))
+                    interactive_links.append(urljoin(current_url, btn_link))
                     
                 # 3. Onclick Redirection Parser (Extracts paths/links from scripts)
                 for onclick in tree.xpath('//*[@onclick]/@onclick'):
                     matches = re.findall(r"['\"](/[^'\"]+)['\"]|['\"](https?://[^'\"]+)['\"]", onclick)
                     for match in matches:
                         found_path = match[0] if match[0] else match[1]
-                        candidate_links.append(urljoin(current_url, found_path))
+                        interactive_links.append(urljoin(current_url, found_path))
+
+                # 4. Global Raw Script Navigation Sniffer (Resolves navigateTo, location, etc. on single-page apps)
+                raw_js_matches = re.findall(r"(?:navigateTo|navigate|push|location\.href|location)\s*\(\s*['\"](/[^'\"]+)['\"]", response.text)
+                for r_match in raw_js_matches:
+                    interactive_links.append(urljoin(current_url, r_match))
                 
                 # Standardize, filter, and queue discovered links
-                for link in candidate_links:
+                valid_standard = []
+                valid_interactive = []
+
+                for link in standard_links:
                     clean_link = normalize_url(link)
-                    if (is_public_url(clean_link, base_domain) and 
-                        clean_link not in visited and 
-                        clean_link not in [q[0] for q in queue]):
+                    if is_public_url(clean_link, base_domain) and clean_link not in visited and clean_link not in [q[0] for q in queue]:
+                        valid_standard.append(clean_link)
                         queue.append((clean_link, depth + 1))
+
+                for link in interactive_links:
+                    clean_link = normalize_url(link)
+                    if is_public_url(clean_link, base_domain) and clean_link not in visited and clean_link not in [q[0] for q in queue]:
+                        valid_interactive.append(clean_link)
+                        queue.append((clean_link, depth + 1))
+
+                # Diagnostics Logging
+                if valid_standard:
+                    print(f"      [Found standard links]: {len(valid_standard)} items")
+                if valid_interactive:
+                    print(f"      [Found interactive button/script links]: {len(valid_interactive)} items -> {valid_interactive}")
                         
             except Exception as e:
                 print(f"   [Crawler] Exception crawling {current_url}: {e}")
@@ -258,7 +285,7 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List
     return discovered_urls
 
 # ---------------------------------------------------------------------------
-# Core Interface Function (Verification Included)
+# Core Interface Functions (Verification Included)
 # ---------------------------------------------------------------------------
 
 def discover_public_links(start_url: str, max_discovery: int = 6) -> List[str]:
@@ -330,3 +357,47 @@ def scrape_page(url: str) -> str:
     except Exception as e:
         print(f"   [Scraper] Error scraping {url}: {e}")
         return ""
+
+# ---------------------------------------------------------------------------
+# Scrape Orchestrator with Token Limits (Randomized limit: 25000 to 50000 tokens)
+# ---------------------------------------------------------------------------
+
+def scrape_pages_with_limit(urls: List[str]) -> List[str]:
+    """
+    Scrapes a list of pages while strictly enforcing a random token limitation
+    to optimize API usage and avoid scraping excessive amounts of data.
+    """
+    # Generate an increased random token limit between 25000 and 50000 tokens
+    token_limit = random.randint(25000, 50000)
+    print(f"   [Limit] Dynamic token limit initialized: {token_limit} tokens.")
+    
+    cumulative_tokens = 0
+    scraped_data_list = []
+    
+    for i, page_url in enumerate(urls, 1):
+        print(f"   [{i}/{len(urls)}] Scraping: {page_url}")
+        text = scrape_page(page_url)
+        if not text:
+            print(f"      [Scrape Error] Empty content or failed fetch for {page_url}")
+            continue
+            
+        page_tokens = len(text) // 4  # Standard 1 token ≈ 4 characters rule
+        print(f"      [Tokens] Scraped: {len(text)} chars (~{page_tokens} tokens)")
+        
+        if cumulative_tokens + page_tokens > token_limit:
+            # We reached the budget limit, truncate this last page to fit remaining space
+            remaining_tokens = token_limit - cumulative_tokens
+            if remaining_tokens > 100:  # Only append if there's significant space left
+                allowed_chars = remaining_tokens * 4
+                truncated_text = text[:allowed_chars] + "\n[Content truncated due to Deep Audit token limits]"
+                scraped_data_list.append(f"PAGE: {page_url}\nCONTENT: {truncated_text}\n---")
+                print(f"      [Limit] Content truncated to fit remaining space. Added {remaining_tokens} tokens.")
+            print(f"   [Limit] Strict token limit reached ({token_limit} tokens). Stopping further scraping.")
+            break
+        else:
+            scraped_data_list.append(f"PAGE: {page_url}\nCONTENT: {text}\n---")
+            cumulative_tokens += page_tokens
+            print(f"      [Cumulative] Total tokens so far: {cumulative_tokens}/{token_limit}")
+            
+    print(f"   [Limit] Final total estimated tokens consumed: {cumulative_tokens}/{token_limit}")
+    return scraped_data_list
