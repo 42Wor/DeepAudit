@@ -14,12 +14,12 @@ audit_report_schema = {
     "properties": {
         "business_summary": {
             "type": "STRING",
-            "description": "2-3 sentence summary of what this business/website does based on content"
+            "description": "Strictly a 1-2 sentence summary of what this business/website does based on the scraped content."
         },
         "detected_features": {
             "type": "ARRAY",
             "items": {"type": "STRING"},
-            "description": "List of key features, services, or products identified on the site"
+            "description": "List of key features, services, or products currently identified on the site."
         },
         "issues": {
             "type": "ARRAY",
@@ -28,16 +28,16 @@ audit_report_schema = {
                 "properties": {
                     "type": {
                         "type": "STRING",
-                        "description": "The category of the issue, e.g., SEO, Accessibility, UX, Content, or Operations"
+                        "description": "The category of the issue, e.g., SEO, Accessibility, UX, Content, or Operations."
                     },
                     "description": {
                         "type": "STRING",
-                        "description": "A concise description of the detected issue and its operational impact"
+                        "description": "A highly detailed, in-depth explanation of the detected issue, bottleneck, or technical gap, and exactly how it negatively impacts their business operations."
                     }
                 },
                 "required": ["type", "description"]
             },
-            "description": "List of problems, bottlenecks, or technical gaps found on the site"
+            "description": "List of detailed problems, bottlenecks, or technical gaps found on the site."
         },
         "automation_opportunities": {
             "type": "ARRAY",
@@ -46,16 +46,16 @@ audit_report_schema = {
                 "properties": {
                     "opportunity": {
                         "type": "STRING",
-                        "description": "Name or title of the automation opportunity"
+                        "description": "Name or title of the specific automation solution Neeura.ai can build for them."
                     },
                     "impact": {
                         "type": "STRING",
-                        "description": "Detailed impact on business efficiency, scale, or user experience"
+                        "description": "A detailed business plan explaining exactly how Neeura.ai will implement this automation, the specific tools/AI used, and the massive impact it will have on their efficiency, scale, or revenue."
                     }
                 },
                 "required": ["opportunity", "impact"]
             },
-            "description": "AI automation opportunities that could improve this business operations"
+            "description": "Specific, high-impact AI automation strategies and services that Neeura.ai can provide to this business."
         }
     },
     "required": ["business_summary", "detected_features", "issues", "automation_opportunities"]
@@ -87,8 +87,8 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
     if len(combined_text) > max_chars:
         combined_text = combined_text[:max_chars] + "\n[Content truncated due to length limits]"
     
-    # Prompt contains only target data to facilitate cleaner generation
-    prompt = f"Analyze the following scraped website content from {url} and generate the structured audit report:\n\nSCRAPED CONTENT:\n{combined_text}"
+    # Prompt tailored to pitch Neeura.ai's services
+    prompt = f"Analyze the following scraped website content from {url}. Generate a highly detailed, structured audit report and an AI automation business plan pitching what Neeura.ai can do for them:\n\nSCRAPED CONTENT:\n{combined_text}"
     
     try:
         # Retrieve client from cache (saves network initialization overhead)
@@ -98,12 +98,18 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
         print(f"   [AI] Sending content to Gemini (gemini-3.5-flash) for structured audit...")
         print(f"   [AI] Total payload size: {len(combined_text)} characters.")
         
-        # Build optimized config
+        # Build optimized config with updated System Instructions
         config_args = {
-            "temperature": 0.2, # Lower temperature for stable, faster outputs
+            "temperature": 0.3, # Slightly increased to allow for more creative/detailed business plans
             "response_mime_type": "application/json",
             "response_schema": audit_report_schema,
-            "system_instruction": "You are an expert web auditor and AI automation consultant. Analyze the scraped content of the website and provide a structured, practical audit with realistic and actionable recommendations."
+            "system_instruction": (
+                "You are an expert AI automation consultant working for 'Neeura.ai', a premier AI automation agency. "
+                "Your goal is to analyze a potential client's website and generate a highly detailed, actionable business plan and automation strategy. "
+                "1. Keep the 'business_summary' strictly to 1 or 2 sentences. "
+                "2. For 'issues', provide deep, highly detailed explanations of their operational bottlenecks and technical gaps. "
+                "3. For 'automation_opportunities', pitch specific, high-impact solutions that Neeura.ai can build and implement for them. Explain exactly what Neeura.ai will do to solve their problems and scale their business."
+            )
         }
         
         # Enable low-latency fast response config if supported by model/SDK version
@@ -139,7 +145,7 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
                 "description": f"AI analysis failed to complete: {str(e)}. Please check API credentials and network quotas."
             }],
             "automation_opportunities": [{
-                "opportunity": "Manual Audit Required",
-                "impact": "The automated analysis cycle was interrupted. Please review the website's paths manually."
+                "opportunity": "Schedule a Manual Consultation with Neeura.ai",
+                "impact": "The automated analysis cycle was interrupted. Please contact Neeura.ai directly so our experts can manually review your website and build a custom automation strategy for you."
             }]
         }

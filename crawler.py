@@ -29,7 +29,7 @@ EXCLUDED_EXTENSIONS = (
 )
 
 USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0; +https://neeura.ai/bot)'
-MAX_WORKERS = 5  # Number of parallel HTTP requests
+MAX_WORKERS = 10  # Increased to 10 for faster parallel processing of up to 20 pages
 POLITE_DELAY = 0.1  # Small delay per request (in seconds)
 
 # Pre-compiled regular expression for faster filter parsing
@@ -284,7 +284,10 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client:
 # Core Discovery (Hybrid: Sitemap → BFS, parallel verification)
 # ---------------------------------------------------------------------------
 
-def discover_public_links(start_url: str, max_discovery: int = 6, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
+def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
+    """
+    max_discovery increased to 20 to scan up to 20 pages per website.
+    """
     base_domain = urlparse(start_url).netloc
     normalized_start = normalize_url(start_url)
 
