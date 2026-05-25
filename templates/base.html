@@ -111,20 +111,20 @@
 </head>
 <body>
 
-    <!-- Micro-Progress Indicator -->
-    <div id="top-progress-bar" class="fixed top-0 left-0 h-[3px] bg-gradient-to-r from-brand-primary to-brand-secondary z-[100] w-0 transition-all duration-500 shadow-[0_1px_10px_rgba(14,165,233,0.5)]"></div>
-
     <!-- Header Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass-nav w-full">
+        <!-- Progress Bar attached to the bottom border of the navbar to prevent display truncation on small screens -->
+        <div id="top-progress-bar" class="absolute bottom-0 left-0 h-[3px] bg-gradient-to-r from-brand-primary to-brand-secondary z-[100] w-0 transition-all duration-500 shadow-[0_1px_10px_rgba(14,165,233,0.5)]"></div>
+
         <div class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-14 sm:h-20">
-                <!-- Left Logo block (Logo text hides below 440px to prevent viewport crowding) -->
-                <div class="flex-shrink-0">
-                    <a href="/" class="flex items-center gap-1.5 sm:gap-3 hover:opacity-80 transition-opacity">
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
-                            <i class="fas fa-layer-group text-brand-primary text-sm sm:text-xl"></i>
+                <!-- Left Logo block (Dynamic inline class controls display visibility) -->
+                <div id="header-logo" class="flex flex-shrink-0 transition-opacity duration-500">
+                    <a href="/" class="flex items-center gap-1 sm:gap-2 hover:opacity-80 transition-opacity">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center border border-brand-primary/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]">
+                            <i class="fas fa-layer-group text-brand-primary text-[10px] sm:text-sm"></i>
                         </div>
-                        <span class="hidden min-[440px]:inline text-base sm:text-2xl font-black tracking-tighter text-white">
+                        <span class="text-xs min-[400px]:text-sm sm:text-lg font-black tracking-tighter text-white">
                             DEEP<span class="text-brand-primary">AUDIT</span>
                         </span>
                     </a>
@@ -194,7 +194,7 @@
                 <!-- Center: Compact Dynamic Mobile Status Pill -->
                 <div class="flex md:hidden items-center bg-brand-primary/10 border border-brand-primary/30 rounded-full px-2.5 py-1 text-[10px] font-mono font-bold text-brand-primary gap-1.5 animate-pulse transition-all duration-500 opacity-0" id="header-stepper-mobile" style="display: none;">
                     <i class="fas fa-spinner fa-spin text-[9px]"></i>
-                    <span id="header-stepper-mobile-text">Step 1/5</span>
+                    <span id="header-stepper-mobile-text">1/5: Submitting</span>
                     <span id="mobile-step-timer" class="opacity-75 font-normal ml-0.5 tracking-tighter"></span>
                 </div>
                 
@@ -273,6 +273,7 @@
             const headerStepperMobileText = document.getElementById('header-stepper-mobile-text');
             const statusMsg = document.getElementById('stepper-status-msg');
             const progressBar = document.getElementById('top-progress-bar');
+            const logoEl = document.getElementById('header-logo');
             
             const stepWidths = {
                 submit: '20%',
@@ -318,16 +319,16 @@
             const currentIdx = steps.indexOf(step);
             if (currentIdx === -1) return;
 
-            // 4. Set Mobile Status Label
+            // 4. Set Detailed Mobile Status Label
             if (headerStepperMobileText) {
                 const labels = {
-                    submit: 'Step 1/5',
-                    discover: 'Step 2/5',
-                    scrape: 'Step 3/5',
-                    analyze: 'Step 4/5',
-                    complete: 'Step 5/5'
+                    submit: '1/5: Submitting',
+                    discover: '2/5: Discovering',
+                    scrape: '3/5: Scraping',
+                    analyze: '4/5: Analyzing',
+                    complete: '5/5: Compiling'
                 };
-                headerStepperMobileText.textContent = labels[step] || `Step ${currentIdx + 1}/5`;
+                headerStepperMobileText.textContent = labels[step] || `${currentIdx + 1}/5`;
             }
 
             // 5. Update Desktop Stepper Configurations
@@ -395,6 +396,12 @@
                 startTime = Date.now();
                 currentStep = step;
                 
+                // Hide logo dynamically on smaller screen viewports during active states
+                if (logoEl) {
+                    logoEl.classList.add('hidden', 'md:flex');
+                    logoEl.classList.remove('flex');
+                }
+
                 const stepEl = document.getElementById('h-step-' + step);
                 const mobileTimer = document.getElementById('mobile-step-timer');
                 
@@ -409,6 +416,12 @@
                     }
                 }, 100);
             } else {
+                // Restore logo completely on mobile viewports when the process is done
+                if (logoEl) {
+                    logoEl.classList.remove('hidden', 'md:flex');
+                    logoEl.classList.add('flex');
+                }
+
                 const mobileTimer = document.getElementById('mobile-step-timer');
                 if (mobileTimer) mobileTimer.textContent = '';
             }
@@ -424,6 +437,13 @@
             if (progressBar) {
                 progressBar.style.width = '0%';
                 progressBar.style.opacity = '1';
+            }
+
+            // Restore the logo when resetting
+            const logoEl = document.getElementById('header-logo');
+            if (logoEl) {
+                logoEl.classList.remove('hidden', 'md:flex');
+                logoEl.classList.add('flex');
             }
 
             // Propagate clear requests to client files

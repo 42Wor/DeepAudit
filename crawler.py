@@ -274,7 +274,7 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client:
 
 def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
     # OVERRIDE: Force max_discovery to 20 to ignore legacy limits passed from app.py
-    max_discovery = 20
+    max_discovery = 18
     
     # 1. EARLY TARGET VALIDATION GATEWAY
     # Before starting expensive crawling routines, verify if the domain is correctly formatted, online, and accessible.
@@ -405,7 +405,7 @@ def scrape_page(url: str, client: httpx.Client = _SHARED_CLIENT) -> str:
 # ---------------------------------------------------------------------------
 
 def scrape_pages_with_limit(urls: List[str], client: httpx.Client = _SHARED_CLIENT) -> List[str]:
-    token_limit = random.randint(100000, 180000)
+    token_limit = random.randint(80000, 100000)
     print(f"   [Limit] Dynamic token limit initialized: {token_limit} tokens.")
 
     # Scrape all pages in parallel using the pooled connection pool
