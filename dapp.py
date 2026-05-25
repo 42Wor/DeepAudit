@@ -7,88 +7,64 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    """Serve the main auditor interface."""
     return render_template("index.html")
 
 @app.route("/api/audit", methods=["GET"])
 def run_audit():
-    """
-    Dummy SSE audit endpoint.
-    Streams delayed step updates and mock data for UI simulation.
-    """
     url = request.args.get("url", "").strip()
     if not url:
         return jsonify({"error": "URL parameter is required"}), 400
     
-    # Normalize URL for display
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
         
     def generate_dummy_stream():
-        # Step 2: Discover Pages
         yield f"data: {json.dumps({'step': 'discover', 'message': 'Searching for public sitemaps and crawling domain routes...'})}\n\n"
-        time.sleep(1.5)
+        time.sleep(1.2)
         
-        # Step 3: Scrape Content
         yield f"data: {json.dumps({'step': 'scrape', 'message': 'Discovered 6 pages. Scraping text content and filtering code blocks...'})}\n\n"
-        time.sleep(1.5)
+        time.sleep(1.2)
         
-        # Step 4: AI Analysis
         yield f"data: {json.dumps({'step': 'analyze', 'message': 'Sending payload to Gemini for structured audit and analysis...'})}\n\n"
-        time.sleep(1.5)
+        time.sleep(1.2)
         
-        # Step 5: Complete & Yield Report Data
         dummy_data = {
-            "scanned_pages": [
-                f"{url}/",
-                f"{url}/about-us",
-                f"{url}/services",
-                f"{url}/contact",
-                f"{url}/blog",
-                f"{url}/pricing"
-            ],
-            "business_summary": "This website represents a growing business that offers various services to its clients. While the site has a solid foundation, it currently relies heavily on manual processes for customer engagement, lead generation, and support, presenting significant opportunities for AI-driven scaling.",
-            "detected_features": [
-                "Contact & Inquiry Forms",
-                "Service/Product Listings",
-                "Customer Testimonials",
-                "Blog & News Section",
-                "Newsletter Subscription"
-            ],
+            "detected_industry": "professional_services",
+            "automation_score": 45,
+            "hours_wasted_monthly": "35-50",
+            "money_lost_monthly": "$1,200-$2,000",
+            "business_summary": "This site represents a growing B2B professional services firm operating globally. While they maintain active landing pages, client acquisition and operations are managed via slow, manual follow-ups.",
             "issues": [
                 {
-                    "type": "UX / Conversion",
-                    "description": "No immediate automated response mechanism for customer inquiries, potentially leading to drop-offs."
+                    "type": "Lead Generation",
+                    "severity": "critical",
+                    "description": "Lead intake forms are static and completely unintegrated with a CRM. Manual entry processes waste up to 18 hours per month, with approximately a 25% drop-off in candidate follow-up times."
+                },
+                {
+                    "type": "Communication",
+                    "severity": "high",
+                    "description": "Lack of live chat support or interactive triage means off-hours inquiries are completely dropped, costing around 12 hours/month of potential engagement."
                 },
                 {
                     "type": "Operations",
-                    "description": "Lead capture forms do not seem to be connected to an automated qualification or CRM routing system."
-                },
-                {
-                    "type": "Content",
-                    "description": "Static content delivery without personalized recommendations based on user behavior."
-                },
-                {
-                    "type": "SEO",
-                    "description": "Missing dynamic meta tags and structured data on several key service pages."
+                    "severity": "medium",
+                    "description": "No self-serve booking interface. Manual coordination of calendar availability via back-and-forth emails wastes 8 hours/month."
                 }
             ],
             "automation_opportunities": [
                 {
-                    "opportunity": "Neeura.ai Intelligent Customer Support Agent",
-                    "impact": "Deploy a custom AI chatbot trained on your business data to handle 24/7 customer inquiries, instantly answering FAQs and routing complex issues to human staff."
+                    "opportunity": "CRM Sync & Lead Qualification Pipeline",
+                    "tools": "n8n, OpenAI Assistant API, HubSpot",
+                    "time_saved": "15-20 hours/month",
+                    "implementation_time": "2 weeks",
+                    "impact": "Automatically processes incoming leads, runs AI qualification scoring, and pushes structured records directly into HubSpot with custom alerts."
                 },
                 {
-                    "opportunity": "Automated Lead Qualification & CRM Sync",
-                    "impact": "Implement Neeura.ai workflows to automatically score incoming leads from your contact forms and sync them directly to your CRM with AI-generated summaries."
-                },
-                {
-                    "opportunity": "AI-Driven Content Generation Pipeline",
-                    "impact": "Utilize Neeura.ai's content tools to automatically generate blog drafts, social media posts, and newsletters based on trending topics in your industry."
-                },
-                {
-                    "opportunity": "Smart Invoice & Follow-up Automation",
-                    "impact": "Streamline your billing process by automatically generating invoices and sending intelligent, polite follow-up emails for overdue payments."
+                    "opportunity": "24/7 AI-Driven Triage and Booking Agent",
+                    "tools": "Custom AI Chatbot, Cal.com API, n8n",
+                    "time_saved": "10-15 hours/month",
+                    "implementation_time": "2-3 weeks",
+                    "impact": "Resolves basic visitor questions instantly and books qualified prospect conversations directly into sales calendars without human delay."
                 }
             ]
         }

@@ -3,7 +3,7 @@ import json
 from flask import Flask, render_template, request, jsonify, Response
 from dotenv import load_dotenv
 
-# Import our custom modules
+# Import custom modules
 from crawler import discover_public_links, scrape_pages_with_limit
 from ai import run_ai_audit
 
@@ -22,12 +22,12 @@ def index():
 def run_audit():
     """
     Main real-time audit endpoint using Server-Sent Events (SSE).
-    1. Validates input URL
-    2. Streams progress updates matching steps
-    3. Discovers public pages via hybrid crawler (Sitemap -> lxml BFS Depth 3)
-    4. Scrapes content with limits
-    5. Runs AI analysis on aggregated content
-    6. Yields complete structured audit report to frontend
+    1. Validates input URL structure and accessibility.
+    2. Streams progress updates matching execution steps.
+    3. Discovers public pages via hybrid crawler (Sitemap -> lxml BFS Depth 3).
+    4. Scrapes content with limits.
+    5. Runs AI analysis on aggregated content using the custom Neeura.ai guidelines.
+    6. Yields complete structured audit report to frontend.
     """
     url = request.args.get("url", "").strip()
     if not url:
@@ -41,11 +41,11 @@ def run_audit():
 
     def generate_audit_stream():
         try:
-            # Step 1: Submit URL already completed in UI
+            # Step 1: Submit URL completed on input submission
             
             # Step 2: Discover Pages
             yield f"data: {json.dumps({'step': 'discover', 'message': 'Searching for sitemaps and discovering public pages...'})}\n\n"
-            public_urls = discover_public_links(url, max_discovery=6)
+            public_urls = discover_public_links(url, max_discovery=20)
             
             if not public_urls:
                 yield f"data: {json.dumps({'error': 'No public pages discovered', 'suggestion': 'The site may block crawlers or have no indexable content.'})}\n\n"
@@ -62,15 +62,16 @@ def run_audit():
             combined_text = "\n".join(scraped_data_list)
             
             # Step 4: AI Analysis
-            yield f"data: {json.dumps({'step': 'analyze', 'message': f'Scraped {len(combined_text)} characters. Running neeura AI structured audit...'})}\n\n"
+            yield f"data: {json.dumps({'step': 'analyze', 'message': f'Scraped {len(combined_text)} characters. Running Neeura AI structured audit...'})}\n\n"
             audit_report = run_ai_audit(url, combined_text)
-            
-            # Attach scanned pages to the final report
-            audit_report["scanned_pages"] = public_urls
             
             # Step 5: Report Ready / Complete
             yield f"data: {json.dumps({'step': 'complete', 'message': 'Audit compiled successfully!', 'data': audit_report})}\n\n"
             print("✅ Real-Time Audit complete!")
+            
+        except ValueError as val_err:
+            print(f"⚠️ Validation warning during SSE audit: {val_err}")
+            yield f"data: {json.dumps({'error': str(val_err), 'suggestion': 'Please double check spelling, verify the target host status, or check if automated crawlers are being blocked.'})}\n\n"
             
         except Exception as e:
             print(f"❌ Unexpected error during SSE audit stream: {e}")

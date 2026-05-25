@@ -57,9 +57,30 @@
 
 <!-- Skeleton Loading State -->
 <div id="skeleton-state" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full animate-fade-in-up">
-    <!-- Top Grid: Summary & Features -->
+    <!-- Skeleton Top Stats Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
+            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-5 bg-white/10 rounded w-3/4"></div>
+        </div>
+        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
+            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-5 bg-white/10 rounded w-2/5"></div>
+        </div>
+        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
+            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-5 bg-white/10 rounded w-3/5"></div>
+        </div>
+        <div class="glass-card rounded-2xl p-4 sm:p-5 h-20 animate-pulse bg-white/[0.02]">
+            <div class="h-3 bg-white/10 rounded w-1/2 mb-2"></div>
+            <div class="h-5 bg-white/10 rounded w-1/2"></div>
+        </div>
+    </div>
+    
+    <!-- Top Details Grid Skeleton -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
+        <!-- Business Summary Skeleton -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse bg-white/[0.01]">
             <div class="flex items-center gap-3 mb-5 sm:mb-6">
                 <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
                 <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
@@ -71,22 +92,21 @@
                 <div class="h-4 bg-white/10 rounded w-4/5"></div>
             </div>
         </div>
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
+        <!-- Issues Skeleton -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse bg-white/[0.01]">
             <div class="flex items-center gap-3 mb-5 sm:mb-6">
                 <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
                 <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow">
-                <div class="h-16 bg-white/10 rounded-2xl"></div>
-                <div class="h-16 bg-white/10 rounded-2xl"></div>
-                <div class="h-16 bg-white/10 rounded-2xl"></div>
-                <div class="h-16 bg-white/10 rounded-2xl"></div>
+            <div class="space-y-4 flex-grow">
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
+                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
             </div>
         </div>
     </div>
     
-    <!-- Middle Section: Automation Plan -->
-    <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/20 border-2 animate-pulse">
+    <!-- Middle Section: Automation Plan Skeleton -->
+    <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/20 border-2 animate-pulse bg-white/[0.01]">
         <div class="mb-8 text-center sm:text-left">
             <div class="h-6 bg-white/10 rounded-full w-48 mb-4 mx-auto sm:mx-0"></div>
             <div class="h-10 bg-white/10 rounded w-1/2 mb-4 mx-auto sm:mx-0"></div>
@@ -96,42 +116,36 @@
             <div class="h-28 bg-white/10 rounded-2xl w-full"></div>
         </div>
     </div>
-
-    <!-- Bottom Grid: Issues & Scanned Pages (FIXED/ADDED) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
-            <div class="flex items-center gap-3 mb-5 sm:mb-6">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-                <div class="h-6 sm:h-8 bg-white/10 rounded w-1/2"></div>
-            </div>
-            <div class="space-y-4 flex-grow">
-                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-20 bg-white/10 rounded-xl w-full"></div>
-            </div>
-        </div>
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full animate-pulse">
-            <div class="flex items-center justify-between mb-5 sm:mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-xl"></div>
-                    <div class="h-6 sm:h-8 bg-white/10 rounded w-32"></div>
-                </div>
-                <div class="h-6 bg-white/10 rounded-full w-16"></div>
-            </div>
-            <div class="space-y-3 flex-grow">
-                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
-                <div class="h-12 bg-white/10 rounded-xl w-full"></div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Results Section -->
 <div id="results-section" class="hidden flex-col gap-6 sm:gap-8 lg:gap-10 pb-12 sm:pb-20 w-full opacity-0 transition-opacity duration-700">
+    <!-- Top Stats Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Detected Industry</span>
+            <span id="res-industry" class="text-sm sm:text-lg lg:text-xl font-extrabold text-white capitalize">-</span>
+        </div>
+        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border-l-4 border-l-brand-primary">
+            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Automation Score</span>
+            <div class="flex items-baseline gap-1">
+                <span id="res-score" class="text-xl sm:text-2xl lg:text-3xl font-black text-brand-primary">-</span>
+                <span class="text-[10px] sm:text-xs text-gray-500 font-bold">/100</span>
+            </div>
+        </div>
+        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border-l-4 border-l-yellow-500">
+            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Hours Wasted / Mo</span>
+            <span id="res-hours-wasted" class="text-lg sm:text-xl lg:text-2xl font-black text-yellow-500">-</span>
+        </div>
+        <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between border-l-4 border-l-red-500">
+            <span class="text-[10px] sm:text-xs font-mono font-bold text-gray-400 uppercase tracking-wider mb-2">Money Lost / Mo</span>
+            <span id="res-money-lost" class="text-lg sm:text-xl lg:text-2xl font-black text-red-500">-</span>
+        </div>
+    </div>
+
+    <!-- Details Grid: Business Summary & Issues Side-by-Side -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+        <!-- Business Summary -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
             <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
                 <div class="p-2 sm:p-3 bg-brand-primary/20 rounded-xl text-brand-primary shadow-inner"><i class="fas fa-chart-pie"></i></div>
@@ -139,15 +153,18 @@
             </h3>
             <p id="res-summary" class="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg flex-grow"></p>
         </div>
+        
+        <!-- Issues & Bottlenecks (Moved Up) -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col h-full">
             <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-                <div class="p-2 sm:p-3 bg-brand-accent/20 rounded-xl text-brand-accent shadow-inner"><i class="fas fa-star"></i></div>
-                Detected Features
+                <div class="p-2 sm:p-3 bg-red-500/20 rounded-xl text-red-400 shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
+                Issues & Bottlenecks
             </h3>
-            <div id="res-features" class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow max-h-[450px] overflow-y-auto custom-scrollbar pr-2"></div>
+            <ul id="res-issues" class="grid grid-cols-1 gap-4 overflow-y-auto max-h-[450px] custom-scrollbar pr-2"></ul>
         </div>
     </div>
 
+    <!-- Automation & Business Plan -->
     <div class="glass-card rounded-3xl p-6 sm:p-10 lg:p-12 border-brand-primary/50 border-2 relative overflow-hidden shadow-[0_0_40px_rgba(14,165,233,0.1)]">
         <div class="absolute top-0 right-0 w-64 h-64 bg-brand-primary opacity-15 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
         <div class="relative z-10 mb-8 text-center sm:text-left">
@@ -165,37 +182,15 @@
             </a>
         </div>
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10">
-            <h3 class="text-lg sm:text-xl lg:text-2xl font-bold mb-5 sm:mb-6 flex items-center gap-3 text-white">
-                <div class="p-2 sm:p-3 bg-red-500/20 rounded-xl text-red-400 shadow-inner"><i class="fas fa-exclamation-triangle"></i></div>
-                Issues & Bottlenecks
-            </h3>
-            <ul id="res-issues" class="grid grid-cols-1 gap-4"></ul>
-        </div>
-        <div class="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col">
-            <div class="flex items-center justify-between mb-5 sm:mb-6">
-                <h3 class="text-lg sm:text-xl lg:text-2xl font-bold flex items-center gap-3 text-white">
-                    <div class="p-2 sm:p-3 bg-brand-secondary/20 rounded-xl text-brand-secondary shadow-inner"><i class="fas fa-sitemap"></i></div>
-                    Scanned Pages
-                </h3>
-                <span id="res-pages-count" class="text-xs font-mono px-2.5 py-1 bg-brand-secondary/10 border border-brand-secondary/30 rounded-full text-brand-secondary font-semibold">0 Pages</span>
-            </div>
-            <ul id="res-pages" class="space-y-2.5 pr-2 sm:pr-4 flex-grow"></ul>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // UX Helper: Pre-fill input with https:// on focus
     const urlInput = document.getElementById('url-input');
     const errorContainer = document.getElementById('error-container');
     
     urlInput.addEventListener('focus', function() {
-        // Clear past errors from screen when user goes to type again
         errorContainer.classList.add('hidden');
         if (!this.value.trim()) {
             this.value = 'https://';
@@ -208,7 +203,6 @@
         }
     });
 
-    // System Reset Functionality
     window.resetAudit = function() {
         const resultsSection = document.getElementById('results-section');
         const skeletonState = document.getElementById('skeleton-state');
@@ -217,7 +211,6 @@
         const freshStartBtn = document.getElementById('fresh-start-btn');
         const bodyStatusContainer = document.getElementById('body-status-container');
         
-        // Hide Header Stepper Elements
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
         if (headerStepper) {
@@ -241,10 +234,16 @@
         freshStartBtn.classList.add('hidden');
         heroWrapper.classList.remove('hero-hidden');
         searchContainer.classList.replace('max-w-5xl', 'max-w-4xl');
+        
+        // Clear Stat Nodes
+        document.getElementById('res-industry').textContent = '-';
+        document.getElementById('res-score').textContent = '-';
+        document.getElementById('res-hours-wasted').textContent = '-';
+        document.getElementById('res-money-lost').textContent = '-';
+        
         setTimeout(() => { urlInput.focus(); }, 300);
     };
 
-    // Header Stepper Styling & Mapping Engine
     function updateStepper(step, message) {
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
@@ -255,10 +254,9 @@
             statusMsg.textContent = message;
         }
 
-        // Show header components with fade-in
         if (headerStepper && headerStepper.style.display === 'none') {
             headerStepper.style.display = 'flex';
-            void headerStepper.offsetWidth; // Force reflow
+            void headerStepper.offsetWidth; 
             headerStepper.classList.remove('opacity-0', 'translate-y-[-10px]');
             headerStepper.classList.add('opacity-100', 'translate-y-0');
         }
@@ -302,7 +300,6 @@
             const lineEl = config.lineId ? document.getElementById(config.lineId) : null;
 
             if (idx < currentIdx) {
-                // Completed State
                 el.classList.remove('opacity-30');
                 el.classList.add('opacity-100');
                 if (iconContainer) {
@@ -312,7 +309,6 @@
                 if (labelEl) labelEl.className = "text-brand-accent hidden lg:inline transition-colors duration-500";
                 if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-accent transition-colors duration-500";
             } else if (idx === currentIdx) {
-                // Active State
                 el.classList.remove('opacity-30');
                 el.classList.add('opacity-100');
                 if (iconContainer) {
@@ -322,7 +318,6 @@
                 if (labelEl) labelEl.className = "text-brand-primary hidden lg:inline transition-colors duration-500";
                 if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
             } else {
-                // Pending State
                 el.classList.add('opacity-30');
                 el.classList.remove('opacity-100');
                 if (iconContainer) {
@@ -335,14 +330,12 @@
         });
     }
 
-    // Beautiful Inline Error Handling (Overriding standard browser alert)
     function handleAuditError(errorMsg, suggestion = "Please verify your configuration and try again.") {
         const submitBtn = document.getElementById('submit-btn');
         const skeletonState = document.getElementById('skeleton-state');
         const heroWrapper = document.getElementById('hero-wrapper');
         const bodyStatusContainer = document.getElementById('body-status-container');
         
-        // Hide Stepper Components
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
         if (headerStepper) {
@@ -356,7 +349,6 @@
             setTimeout(() => headerStepperMobile.style.display = 'none', 500);
         }
 
-        // Parse Error Message to generate smart contextual titles
         let title = "Audit Interrupted";
         if (errorMsg.includes("forbidden") || errorMsg.includes("403") || errorMsg.includes("Cloudflare")) {
             title = "Access Blocked by Firewall";
@@ -366,16 +358,13 @@
             title = "Host Domain Unresolved";
         }
 
-        // Populating our modern Error Card
         document.getElementById('error-title').textContent = title;
         document.getElementById('error-message').textContent = errorMsg;
         document.getElementById('error-suggestion').textContent = suggestion;
 
-        // Display the Error Container smoothly
         errorContainer.classList.remove('hidden');
         errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        // Reset submit button and hide pending loaders
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
         
@@ -389,14 +378,11 @@
         e.preventDefault();
         
         let url = document.getElementById('url-input').value.trim();
-        
-        // Clear previous error messages
         errorContainer.classList.add('hidden');
         
-        // Auto-fix URL formatting if http/https prefix is missing
         if (url && !/^https?:\/\//i.test(url)) {
             url = 'https://' + url;
-            document.getElementById('url-input').value = url; // Update input field value
+            document.getElementById('url-input').value = url;
         }
         
         const submitBtn = document.getElementById('submit-btn');
@@ -439,7 +425,6 @@
                     
                     if (data.step) {
                         updateStepper(data.step, data.message);
-                        
                         if (data.step === 'complete') {
                             renderResults(data.data);
                             eventSource.close();
@@ -474,21 +459,23 @@
         
         updateStepper('complete', 'Compiling dashboard reports...');
         
-        // Give the user 1.5 seconds to see the final "Ready" step light up green
         setTimeout(() => {
-            document.getElementById('res-summary').textContent = data.business_summary;
+            // Populate Metric Row
+            document.getElementById('res-industry').textContent = data.detected_industry.replace('_', ' ');
+            document.getElementById('res-hours-wasted').textContent = data.hours_wasted_monthly + " hrs";
+            document.getElementById('res-money-lost').textContent = data.money_lost_monthly;
             
-            const featuresContainer = document.getElementById('res-features');
-            featuresContainer.innerHTML = data.detected_features.map(f => `
-                <div class="bg-black/40 border border-brand-border rounded-2xl p-4 hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-all group">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-brand-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i class="fas fa-check text-brand-accent text-sm"></i>
-                        </div>
-                        <span class="text-sm sm:text-base text-gray-300 group-hover:text-white transition-colors">${f}</span>
-                    </div>
-                </div>
-            `).join('');
+            const scoreEl = document.getElementById('res-score');
+            scoreEl.textContent = data.automation_score;
+            if (data.automation_score < 40) {
+                scoreEl.className = "text-xl sm:text-2xl lg:text-3xl font-black text-red-500";
+            } else if (data.automation_score < 75) {
+                scoreEl.className = "text-xl sm:text-2xl lg:text-3xl font-black text-yellow-500";
+            } else {
+                scoreEl.className = "text-xl sm:text-2xl lg:text-3xl font-black text-brand-primary";
+            }
+
+            document.getElementById('res-summary').textContent = data.business_summary;
 
             const autoList = document.getElementById('res-automation');
             autoList.innerHTML = data.automation_opportunities.map((a, index) => `
@@ -499,48 +486,43 @@
                     </div>
                     <div class="bg-black/40 border border-brand-border rounded-2xl p-5 sm:p-6 hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all ml-2">
                         <h4 class="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-brand-primary transition-colors">${a.opportunity}</h4>
+                        
+                        <!-- Tech Details Badge Row -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-[10px] sm:text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary">
+                                <i class="fas fa-tools mr-1.5"></i> Stack: ${a.tools}
+                            </span>
+                            <span class="text-[10px] sm:text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent">
+                                <i class="fas fa-hourglass-half mr-1.5"></i> Saved: ${a.time_saved}
+                            </span>
+                            <span class="text-[10px] sm:text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-brand-secondary/10 border border-brand-secondary/20 text-brand-secondary">
+                                <i class="fas fa-calendar-alt mr-1.5"></i> Timeline: ${a.implementation_time}
+                            </span>
+                        </div>
+                        
                         <p class="text-gray-400 text-sm sm:text-base leading-relaxed">${a.impact}</p>
                     </div>
                 </div>
             `).join('');
             
             const issuesList = document.getElementById('res-issues');
-            issuesList.innerHTML = data.issues.map(i => `
-                <li class="bg-black/40 p-4 sm:p-5 rounded-xl border border-brand-border border-l-4 border-l-red-500/60 hover:bg-red-500/5 transition-colors">
-                    <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-400 mb-2 block">${i.type}</span>
-                    <span class="text-gray-300 text-sm sm:text-base lg:text-lg">${i.description}</span>
-                </li>
-            `).join('');
-
-            const pagesList = document.getElementById('res-pages');
-            const pagesCountBadge = document.getElementById('res-pages-count');
-            
-            if (pagesCountBadge) {
-                pagesCountBadge.textContent = `${data.scanned_pages.length} Pages`;
-            }
-
-            pagesList.innerHTML = data.scanned_pages.map(p => {
-                let urlObj;
-                try { urlObj = new URL(p); } catch { urlObj = new URL('http://placeholder'); }
-                const path = urlObj.pathname === '/' ? '/' : urlObj.pathname.replace(/\/$/, '');
-                const shortPath = path.length > 35 ? path.substring(0, 32) + '...' : path;
-                
+            issuesList.innerHTML = data.issues.map(i => {
+                let borderCol = "border-l-red-500/60";
+                let labelCol = "text-red-400 bg-red-500/10 border-red-500/20";
+                if (i.severity === 'high') {
+                    borderCol = "border-l-orange-500/60";
+                    labelCol = "text-orange-400 bg-orange-500/10 border-orange-500/20";
+                } else if (i.severity === 'medium') {
+                    borderCol = "border-l-yellow-500/60";
+                    labelCol = "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
+                }
                 return `
-                    <li class="group flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-brand-secondary/30 hover:bg-brand-secondary/[0.03] transition-all duration-200">
-                        <div class="flex items-center gap-3 truncate min-w-0">
-                            <span class="font-mono text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded bg-brand-secondary/10 text-brand-secondary/80 flex-shrink-0">URL</span>
-                            <span class="font-mono text-sm text-gray-300 group-hover:text-white truncate" title="${p}">${shortPath}</span>
+                    <li class="bg-black/40 p-4 sm:p-5 rounded-xl border border-brand-border border-l-4 ${borderCol} hover:bg-white/[0.01] transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-400">${i.type}</span>
+                            <span class="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 border rounded-md ${labelCol}">${i.severity}</span>
                         </div>
-                        <div class="flex items-center gap-3 flex-shrink-0 ml-4 opacity-75 group-hover:opacity-100 transition-opacity">
-                            <button onclick="navigator.clipboard.writeText('${p}'); const i = this.querySelector('i'); i.className = 'fas fa-check text-green-400'; setTimeout(() => i.className = 'fas fa-copy text-xs', 1500);" 
-                                    class="text-gray-500 hover:text-white transition-colors p-1" 
-                                    title="Copy URL">
-                                <i class="fas fa-copy text-xs"></i>
-                            </button>
-                            <a href="${p}" target="_blank" class="text-gray-500 hover:text-brand-secondary transition-colors p-1" title="Visit Page">
-                                <i class="fas fa-external-link-alt text-xs"></i>
-                            </a>
-                        </div>
+                        <p class="text-gray-300 text-sm sm:text-base leading-relaxed">${i.description}</p>
                     </li>
                 `;
             }).join('');
@@ -552,13 +534,10 @@
             resultsSection.classList.remove('hidden');
             resultsSection.classList.add('flex');
             
-            // Force reflow to guarantee fade-in animation triggers
             void resultsSection.offsetWidth;
             resultsSection.classList.add('opacity-100');
-            
             freshStartBtn.classList.remove('hidden');
             
-            // Smoothly hide Header Stepper Elements
             const headerStepper = document.getElementById('header-stepper');
             const headerStepperMobile = document.getElementById('header-stepper-mobile');
             if (headerStepper) {
@@ -575,7 +554,7 @@
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
             
-        }, 1500); // 1.5s delay to show the final step
+        }, 1500);
     }
 </script>
 {% endblock %}
