@@ -32,6 +32,21 @@ USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0; +https://neeura.ai/bot)
 MAX_WORKERS = 5  # Number of parallel HTTP requests
 POLITE_DELAY = 0.1  # Small delay per request (in seconds)
 
+# Pre-compiled regular expression for faster filter parsing
+EXCLUSION_RE = re.compile('|'.join(re.escape(k) for k in EXCLUSION_KEYWORDS), re.IGNORECASE)
+
+# Single, thread-safe high-performance HTTP client with built-in connection pooling
+_SHARED_CLIENT = httpx.Client(
+    headers={'User-Agent': USER_AGENT},
+    timeout=5.0,
+    limits=httpx.Limits(
+        max_keepalive_connections=50,  # Keep open pooled connections
+        max_connections=100,          # High limit for concurrent requests
+        keepalive_expiry=30.0
+    ),
+    follow_redirects=True
+)
+
 # ---------------------------------------------------------------------------
 # URL Validation & Normalization
 # ---------------------------------------------------------------------------
@@ -56,10 +71,9 @@ def is_public_url(url: str, base_domain: str) -> bool:
             return False
         if parsed.path.lower().endswith(EXCLUDED_EXTENSIONS):
             return False
-        normalized_url = url.lower()
-        for keyword in EXCLUSION_KEYWORDS:
-            if keyword in normalized_url:
-                return False
+        # Fast regex match is much quicker than loop iterations
+        if EXCLUSION_RE.search(url):
+            return False
         if len(parsed.query.split('&')) > 5:
             return False
         return True
@@ -70,7 +84,7 @@ def is_public_url(url: str, base_domain: str) -> bool:
 # Dynamic Sitemap Discovery (Parallel)
 # ---------------------------------------------------------------------------
 
-def discover_sitemap_urls(base_url: str) -> List[str]:
+def discover_sitemap_urls(base_url: str, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
     """Find sitemap URLs via robots.txt and common paths in parallel."""
     robots_url = urljoin(base_url, '/robots.txt')
     common_paths = [
@@ -80,11 +94,10 @@ def discover_sitemap_urls(base_url: str) -> List[str]:
 
     def fetch_robots():
         try:
-            with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
-                resp = client.get(robots_url)
-                if resp.status_code == 200:
-                    matches = re.findall(r'^[Ss]itemap:\s*(https?://\S+)', resp.text, re.MULTILINE)
-                    return [normalize_url(m.strip()) for m in matches]
+            resp = client.get(robots_url, timeout=4.0)
+            if resp.status_code == 200:
+                matches = re.findall(r'^[Ss]itemap:\s*(https?://\S+)', resp.text, re.MULTILINE)
+                return [normalize_url(m.strip()) for m in matches]
         except Exception as e:
             print(f"   [Sitemap] Robots.txt check skipped: {e}")
         return []
@@ -92,10 +105,10 @@ def discover_sitemap_urls(base_url: str) -> List[str]:
     def check_common_path(path):
         full_url = urljoin(base_url, path)
         try:
-            with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
-                resp = client.head(full_url)
-                if resp.status_code == 200:
-                    return full_url
+            # Using HEAD prevents pulling unnecessary payload
+            resp = client.head(full_url, timeout=3.0)
+            if resp.status_code == 200:
+                return full_url
         except Exception:
             pass
         return None
@@ -115,11 +128,10 @@ def discover_sitemap_urls(base_url: str) -> List[str]:
 # Sitemap Parser (Recursive with parallel sub‑sitemap fetching)
 # ---------------------------------------------------------------------------
 
-def parse_sitemap(sitemap_url: str, base_domain: str, max_links: int) -> List[str]:
+def parse_sitemap(sitemap_url: str, base_domain: str, max_links: int, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
     urls = []
     try:
-        with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
-            resp = client.get(sitemap_url)
+        resp = client.get(sitemap_url, timeout=5.0)
         if resp.status_code != 200:
             return []
 
@@ -150,7 +162,7 @@ def parse_sitemap(sitemap_url: str, base_domain: str, max_links: int) -> List[st
                 # Fetch first 3 sub‑sitemaps in parallel
                 sub_urls = [loc.text.strip() for loc in sitemaps_locs[:3]]
                 with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, 3)) as executor:
-                    futures = {executor.submit(parse_sitemap, sub_url, base_domain, max_links - len(urls)): sub_url
+                    futures = {executor.submit(parse_sitemap, sub_url, base_domain, max_links - len(urls), client): sub_url
                                for sub_url in sub_urls}
                     for future in as_completed(futures):
                         urls.extend(future.result())
@@ -188,7 +200,7 @@ def parse_sitemap(sitemap_url: str, base_domain: str, max_links: int) -> List[st
 # Parallel BFS Crawler (Depth 3, each depth level parallel)
 # ---------------------------------------------------------------------------
 
-def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List[str]:
+def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
     visited = set()
     normalized_start = normalize_url(start_url)
     queue = [(normalized_start, 0)]
@@ -197,45 +209,41 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List
 
     def fetch_page(url, depth):
         """Fetch and parse a single page, returning discovered links."""
-        time.sleep(POLITE_DELAY)  # Small courtesy delay
+        if POLITE_DELAY > 0:
+            time.sleep(POLITE_DELAY)  # Small courtesy delay
         try:
-            with httpx.Client(timeout=8.0, follow_redirects=True,
-                              headers={'User-Agent': USER_AGENT}) as client:
-                response = client.get(url)
-                if response.status_code != 200 or 'text/html' not in response.headers.get('content-type', ''):
-                    return url, None, depth
+            response = client.get(url, timeout=5.0)
+            if response.status_code != 200 or 'text/html' not in response.headers.get('content-type', ''):
+                return url, None, depth
 
-                tree = html.fromstring(response.content)
-                tree.make_links_absolute(url)
+            tree = html.fromstring(response.content)
+            tree.make_links_absolute(url)
 
-                standard_links = []
-                interactive_links = []
+            standard_links = tree.xpath('//a/@href')
+            interactive_links = []
 
-                for link in tree.xpath('//a/@href'):
-                    standard_links.append(link)
+            for btn_link in tree.xpath('//button/@data-href | //button/@data-url | //*[contains(@class, "btn")]/@data-href'):
+                interactive_links.append(urljoin(url, btn_link))
 
-                for btn_link in tree.xpath('//button/@data-href | //button/@data-url | //*[contains(@class, "btn")]/@data-href'):
-                    interactive_links.append(urljoin(url, btn_link))
+            for onclick in tree.xpath('//*[@onclick]/@onclick'):
+                matches = re.findall(r"['\"](/[^'\"]+)['\"]|['\"](https?://[^'\"]+)['\"]", onclick)
+                for match in matches:
+                    found_path = match[0] if match[0] else match[1]
+                    interactive_links.append(urljoin(url, found_path))
 
-                for onclick in tree.xpath('//*[@onclick]/@onclick'):
-                    matches = re.findall(r"['\"](/[^'\"]+)['\"]|['\"](https?://[^'\"]+)['\"]", onclick)
-                    for match in matches:
-                        found_path = match[0] if match[0] else match[1]
-                        interactive_links.append(urljoin(url, found_path))
+            raw_js_matches = re.findall(r"(?:navigateTo|navigate|push|location\.href|location)\s*\(\s*['\"](/[^'\"]+)['\"]", response.text)
+            for r_match in raw_js_matches:
+                interactive_links.append(urljoin(url, r_match))
 
-                raw_js_matches = re.findall(r"(?:navigateTo|navigate|push|location\.href|location)\s*\(\s*['\"](/[^'\"]+)['\"]", response.text)
-                for r_match in raw_js_matches:
-                    interactive_links.append(urljoin(url, r_match))
+            all_links = standard_links + interactive_links
+            valid_links = []
+            for link in all_links:
+                clean = normalize_url(link)
+                if is_public_url(clean, base_domain):
+                    valid_links.append(clean)
 
-                all_links = standard_links + interactive_links
-                valid_links = []
-                for link in all_links:
-                    clean = normalize_url(link)
-                    if is_public_url(clean, base_domain):
-                        valid_links.append(clean)
-
-                print(f"   [Crawl] {url} -> {len(valid_links)} new links")
-                return url, valid_links, depth
+            print(f"   [Crawl] {url} -> {len(valid_links)} new links")
+            return url, valid_links, depth
 
         except Exception as e:
             print(f"   [Crawler] Exception on {url}: {e}")
@@ -276,37 +284,43 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List
 # Core Discovery (Hybrid: Sitemap → BFS, parallel verification)
 # ---------------------------------------------------------------------------
 
-def discover_public_links(start_url: str, max_discovery: int = 6) -> List[str]:
+def discover_public_links(start_url: str, max_discovery: int = 6, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
     base_domain = urlparse(start_url).netloc
     normalized_start = normalize_url(start_url)
 
     print("   [Crawler] Searching for public URLs via Sitemap sources...")
-    sitemap_candidates = discover_sitemap_urls(normalized_start)
+    sitemap_candidates = discover_sitemap_urls(normalized_start, client)
 
     discovered = []
     for sitemap_url in sitemap_candidates:
-        urls = parse_sitemap(sitemap_url, base_domain, max_discovery)
+        urls = parse_sitemap(sitemap_url, base_domain, max_discovery, client)
         discovered.extend(urls)
         if len(discovered) >= max_discovery:
             break
 
     if not discovered:
         print("   [Crawler] No Sitemap found. Activating loop-safe fallback crawler...")
-        discovered = fallback_bfs_crawl(normalized_start, base_domain, max_discovery)
+        discovered = fallback_bfs_crawl(normalized_start, base_domain, max_discovery, client)
 
     unique_urls = list(dict.fromkeys(discovered))
 
-    # Verify all URLs are alive (200) in parallel
+    # Verify all URLs are alive (200) in parallel using the pooled client
     print("   [Crawler] Verifying page statuses (parallel)...")
     verified = []
 
     def check_url(url):
         try:
-            with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
-                resp = client.get(url)
+            # Try lightweight HEAD requests first (drastically reduces bandwidth/time)
+            resp = client.head(url, timeout=3.0)
+            if resp.status_code == 200:
+                return (url, True)
+            # Revert to standard GET only if the server explicitly blocks HEAD requests
+            if resp.status_code in (405, 403, 400):
+                resp = client.get(url, timeout=3.0)
                 return (url, resp.status_code == 200)
         except Exception:
-            return (url, False)
+            pass
+        return (url, False)
 
     with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(unique_urls))) as executor:
         futures = {executor.submit(check_url, u): u for u in unique_urls}
@@ -323,22 +337,20 @@ def discover_public_links(start_url: str, max_discovery: int = 6) -> List[str]:
 # Fast Page Scraper (used in parallel)
 # ---------------------------------------------------------------------------
 
-def scrape_page(url: str) -> str:
+def scrape_page(url: str, client: httpx.Client = _SHARED_CLIENT) -> str:
     try:
-        with httpx.Client(timeout=8.0, follow_redirects=True,
-                          headers={'User-Agent': USER_AGENT}) as client:
-            response = client.get(url)
-            if response.status_code != 200:
-                return ""
+        response = client.get(url, timeout=5.0)
+        if response.status_code != 200:
+            return ""
 
-            tree = html.fromstring(response.content)
-            for tag in ['script', 'style', 'nav', 'footer', 'header', 'aside', 'noscript', 'svg']:
-                for element in tree.xpath(f'//{tag}'):
-                    element.drop_tree()
+        tree = html.fromstring(response.content)
+        # Dropping nested elements with a single unified xpath minimizes internal tree traversals
+        for element in tree.xpath('//script | //style | //nav | //footer | //header | //aside | //noscript | //svg'):
+            element.drop_tree()
 
-            text = tree.text_content()
-            text = re.sub(r'\s+', ' ', text).strip()
-            return text[:3000]
+        text = tree.text_content()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text[:3000]
     except Exception as e:
         print(f"   [Scraper] Error scraping {url}: {e}")
         return ""
@@ -347,20 +359,20 @@ def scrape_page(url: str) -> str:
 # Parallel Scraping with Token Limit
 # ---------------------------------------------------------------------------
 
-def scrape_pages_with_limit(urls: List[str]) -> List[str]:
+def scrape_pages_with_limit(urls: List[str], client: httpx.Client = _SHARED_CLIENT) -> List[str]:
     token_limit = random.randint(25000, 50000)
     print(f"   [Limit] Dynamic token limit initialized: {token_limit} tokens.")
 
-    # Scrape all pages in parallel
+    # Scrape all pages in parallel using the pooled connection pool
     scraped = []
     with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(urls))) as executor:
-        futures = {executor.submit(scrape_page, url): url for url in urls}
+        futures = {executor.submit(scrape_page, url, client): url for url in urls}
         for future in as_completed(futures):
             url = futures[future]
             text = future.result()
             scraped.append((url, text))
 
-    # Sort back to original order
+    # Sort back to original input order
     scraped.sort(key=lambda x: urls.index(x[0]))
 
     cumulative_tokens = 0

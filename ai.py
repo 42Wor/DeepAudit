@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 from typing import Dict, Any, List
 from google import genai
 from google.genai import types
@@ -60,6 +61,19 @@ audit_report_schema = {
     "required": ["business_summary", "detected_features", "issues", "automation_opportunities"]
 }
 
+# Thread-local storage to cache Client instances safely per execution thread
+_thread_local = threading.local()
+
+def _get_gemini_client() -> genai.Client:
+    """
+    Retrieves or initializes a thread-safe cached Gemini client.
+    Reuses connection pools across multiple audit requests to minimize latency.
+    """
+    if not hasattr(_thread_local, "client"):
+        # Explicitly passing API key from environment variable
+        _thread_local.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _thread_local.client
+
 # ===========================================================================
 # Core AI Audit Function (Single, self-contained entry point)
 # ===========================================================================
@@ -67,51 +81,48 @@ audit_report_schema = {
 def run_ai_audit(url: str, combined_text: str) -> dict:
     """
     Runs the website analysis using the Gemini API (google-genai SDK).
-    
-    To change AI providers in the future (e.g. to OpenAI or Anthropic), 
-    this is the ONLY function in your entire application you will need to edit.
     """
-    # Truncate content to fit securely inside LLM context window limits
-    max_chars = 40000  
+    # 32k characters (approx 8k tokens) is the optimal limit for quick turnaround times
+    max_chars = 32000  
     if len(combined_text) > max_chars:
         combined_text = combined_text[:max_chars] + "\n[Content truncated due to length limits]"
     
-    prompt = f"""
-You are an expert web auditor and AI automation consultant. Analyze the scraped content from {url} and provide a comprehensive, highly professional audit.
-
-SCRAPED CONTENT:
-{combined_text}
-
-Provide a structured analysis covering:
-1. What the business does (2-3 sentences)
-2. Key features, services, or products detected
-3. Issues found (SEO, accessibility, UX, content quality, or operational bottlenecks)
-4. AI automation opportunities that could improve this business
-
-Focus on practical, actionable insights. Be specific, realistic, and avoid generic recommendations.
-"""
+    # Prompt contains only target data to facilitate cleaner generation
+    prompt = f"Analyze the following scraped website content from {url} and generate the structured audit report:\n\nSCRAPED CONTENT:\n{combined_text}"
     
     try:
-        # Initialize the modern Gemini Client using the environment variable API key
-        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        # Retrieve client from cache (saves network initialization overhead)
+        client = _get_gemini_client()
         
-        print(f"   [AI] Initialized Gemini Client successfully.")
+        print(f"   [AI] Cached Gemini Client retrieved.")
         print(f"   [AI] Sending content to Gemini (gemini-3.5-flash) for structured audit...")
         print(f"   [AI] Total payload size: {len(combined_text)} characters.")
         
+        # Build optimized config
+        config_args = {
+            "temperature": 0.2, # Lower temperature for stable, faster outputs
+            "response_mime_type": "application/json",
+            "response_schema": audit_report_schema,
+            "system_instruction": "You are an expert web auditor and AI automation consultant. Analyze the scraped content of the website and provide a structured, practical audit with realistic and actionable recommendations."
+        }
+        
+        # Enable low-latency fast response config if supported by model/SDK version
+        try:
+            if hasattr(types, "ThinkingConfig") and hasattr(types, "ThinkingLevel"):
+                config_args["thinking_config"] = types.ThinkingConfig(
+                    thinking_level=types.ThinkingLevel.LOW
+                )
+        except Exception:
+            pass
+
         response = client.models.generate_content(
             model="gemini-3.5-flash",
             contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                response_mime_type="application/json",
-                response_schema=audit_report_schema,
-            )
+            config=types.GenerateContentConfig(**config_args)
         )
         
         print(f"   [AI] Received raw response from Gemini API. Parsing response text...")
         
-        # Parse and return the structured JSON response
         result_json = json.loads(response.text)
         print(f"   [AI] Successfully parsed response JSON. Main keys: {list(result_json.keys())}")
         return result_json
