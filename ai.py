@@ -125,7 +125,7 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
         client = _get_gemini_client()
         
         print(f"   [AI] Cached Gemini Client retrieved.")
-        print(f"   [AI] Sending content to Gemini (gemini-3.5-flash) for structured audit...")
+        print(f"   [AI] Sending content to Gemini (gemini-3.1-flash-lite) for structured audit...")
         
         config_args = {
             "temperature": 0.25, 
@@ -155,7 +155,7 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
             pass
 
         response = client.models.generate_content(
-            model="gemini-3.5-flash",
+            model="gemini-3.1-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(**config_args)
         )

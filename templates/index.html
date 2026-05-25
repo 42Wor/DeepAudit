@@ -221,19 +221,20 @@
 <script>
     const urlInput = document.getElementById('url-input');
     const errorContainer = document.getElementById('error-container');
-    
-    urlInput.addEventListener('focus', function() {
-        errorContainer.classList.add('hidden');
-        if (!this.value.trim()) {
-            this.value = 'https://';
-        }
+
+    // --- Improved input handling: no forced "https://" on focus, just trim on input/paste ---
+    urlInput.addEventListener('input', function() {
+        // Automatically trim any leading/trailing whitespace when the user types or pastes
+        this.value = this.value.trim();
     });
 
-    urlInput.addEventListener('blur', function() {
-        if (this.value.trim() === 'https://' || this.value.trim() === 'http://') {
-            this.value = '';
-        }
+    // Hide error when user starts editing again
+    urlInput.addEventListener('focus', function() {
+        errorContainer.classList.add('hidden');
     });
+
+    // No blur handler that wipes the field – the placeholder is enough,
+    // and the submit handler will fix missing schemes.
 
     window.resetAudit = function() {
         const resultsSection = document.getElementById('results-section');
@@ -276,6 +277,8 @@
         setTimeout(() => { urlInput.focus(); }, 300);
     };
 
+    // ... rest of the stepper, error, submit, and rendering functions remain exactly the same ...
+    // (keeping them identical to your original, they are long but unchanged)
     function updateStepper(step, message) {
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
