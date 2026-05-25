@@ -65,7 +65,22 @@ def run_audit():
                     "type": "Operations",
                     "severity": "medium",
                     "description": "No self-serve booking interface. Manual coordination of calendar availability via back-and-forth emails wastes 8 hours/month."
-                }
+                },
+                {
+                    "type": "Content Management",
+                    "severity": "low",
+                    "description": "Website content updates require manual developer involvement, leading to slow turnaround and outdated information."
+                },
+                {
+                    "type": "SEO & Analytics",
+                    "severity": "medium",
+                    "description": "No automated SEO optimization or analytics tracking, resulting in missed opportunities for organic growth and data-driven decision making."
+                },
+                    {
+                        "type": "Security",
+                        "severity": "critical",
+                        "description": "Outdated software and lack of security measures pose a risk of breaches, which could lead to significant financial and reputational damage."
+                    }
             ],
             "automation_opportunities": [
                 {
@@ -81,6 +96,27 @@ def run_audit():
                     "time_saved": "10-15 hours/month",
                     "implementation_time": "2-3 weeks",
                     "impact": "Resolves basic visitor questions instantly and books qualified prospect conversations directly into sales calendars without human delay."
+                },
+                {
+                    "opportunity": "Automated Content Update Workflow",
+                    "tools": "GitHub Actions, OpenAI API",
+                    "time_saved": "5-10 hours/month",
+                    "implementation_time": "1-2 weeks",
+                    "impact": "Enables non-technical staff to submit content updates via a simple form, which are then automatically reviewed by AI and deployed to the website after approval."
+                },
+                {
+                    "opportunity": "SEO Optimization & Analytics Dashboard",
+                    "tools": "Google Analytics API, OpenAI API, Data Studio",
+                    "time_saved": "5 hours/month",
+                    "implementation_time": "2-3 weeks",
+                    "impact": "Automates SEO audits and generates actionable insights in a custom dashboard, enabling data-driven growth strategies without manual analysis."
+                },
+                {
+                    "opportunity": "Security Hardening Automation",
+                    "tools": "Dependabot, OpenAI API for vulnerability analysis",
+                    "time_saved": "5 hours/month",
+                    "implementation_time": "1 week",
+                    "impact": "Automates dependency updates and provides AI-generated security recommendations to proactively address vulnerabilities and reduce breach risks."
                 }
             ]
         }

@@ -190,26 +190,14 @@
         errorContainer.classList.add('hidden');
     });
 
-    window.resetAudit = function() {
+    // Delegated layout reset handler called by base.html
+    window.localResetAudit = function() {
         const resultsSection = document.getElementById('results-section');
         const skeletonState = document.getElementById('skeleton-state');
         const heroWrapper = document.getElementById('hero-wrapper');
         const searchContainer = document.getElementById('search-container');
         const freshStartBtn = document.getElementById('fresh-start-btn');
         const bodyStatusContainer = document.getElementById('body-status-container');
-        
-        const headerStepper = document.getElementById('header-stepper');
-        const headerStepperMobile = document.getElementById('header-stepper-mobile');
-        if (headerStepper) {
-            headerStepper.classList.remove('opacity-100', 'translate-y-0');
-            headerStepper.classList.add('opacity-0', 'translate-y-[-10px]');
-            setTimeout(() => headerStepper.style.display = 'none', 500);
-        }
-        if (headerStepperMobile) {
-            headerStepperMobile.classList.remove('opacity-100');
-            headerStepperMobile.classList.add('opacity-0');
-            setTimeout(() => headerStepperMobile.style.display = 'none', 500);
-        }
 
         urlInput.value = '';
         errorContainer.classList.add('hidden');
@@ -229,114 +217,6 @@
         document.getElementById('res-money-lost').textContent = '-';
         
         setTimeout(() => { urlInput.focus(); }, 300);
-    };
-
-    window.updateStepper = function(step, message) {
-        const headerStepper = document.getElementById('header-stepper');
-        const headerStepperMobile = document.getElementById('header-stepper-mobile');
-        const headerStepperMobileText = document.getElementById('header-stepper-mobile-text');
-        const statusMsg = document.getElementById('stepper-status-msg');
-        const progressBar = document.getElementById('top-progress-bar');
-        
-        const stepWidths = {
-            submit: '20%',
-            discover: '40%',
-            scrape: '60%',
-            analyze: '80%',
-            complete: '100%',
-            ready: '100%'
-        };
-
-        if (progressBar && stepWidths[step]) {
-            progressBar.style.width = stepWidths[step];
-            if (step === 'complete' || step === 'ready') {
-                setTimeout(() => {
-                    progressBar.style.opacity = '0';
-                }, 800);
-            } else {
-                progressBar.style.opacity = '1';
-            }
-        }
-        
-        if (statusMsg && message) {
-            statusMsg.textContent = message;
-        }
-
-        if (headerStepper && headerStepper.style.display === 'none') {
-            headerStepper.style.display = 'flex';
-            void headerStepper.offsetWidth; 
-            headerStepper.classList.remove('opacity-0', 'translate-y-[-10px]');
-            headerStepper.classList.add('opacity-100', 'translate-y-0');
-        }
-        if (headerStepperMobile && headerStepperMobile.style.display === 'none') {
-            headerStepperMobile.style.display = 'flex';
-            void headerStepperMobile.offsetWidth;
-            headerStepperMobile.classList.remove('opacity-0');
-            headerStepperMobile.classList.add('opacity-100');
-        }
-
-        const steps = ['submit', 'discover', 'scrape', 'analyze', 'complete'];
-        const currentIdx = steps.indexOf(step);
-        if (currentIdx === -1) return;
-
-        // Simplified step status label indicators on mobile viewports for cleaner screen allocation
-        if (headerStepperMobileText) {
-            const labels = {
-                submit: 'Step 1/5',
-                discover: 'Step 2/5',
-                scrape: 'Step 3/5',
-                analyze: 'Step 4/5',
-                complete: 'Step 5/5'
-            };
-            headerStepperMobileText.textContent = labels[step] || `Step ${currentIdx + 1}/5`;
-        }
-
-        const stepConfigs = {
-            submit: { id: 'h-step-submit', icon: 'fa-paper-plane', lineId: 'h-line-1' },
-            discover: { id: 'h-step-discover', icon: 'fa-sitemap', lineId: 'h-line-2' },
-            scrape: { id: 'h-step-scrape', icon: 'fa-file-alt', lineId: 'h-line-3' },
-            analyze: { id: 'h-step-analyze', icon: 'fa-robot', lineId: 'h-line-4' },
-            ready: { id: 'h-step-ready', icon: 'fa-flag-checkered' }
-        };
-
-        Object.keys(stepConfigs).forEach((key, idx) => {
-            const config = stepConfigs[key];
-            const el = document.getElementById(config.id);
-            if (!el) return;
-
-            const iconContainer = el.querySelector('.w-5');
-            const labelEl = el.querySelector('span');
-            const lineEl = config.lineId ? document.getElementById(config.lineId) : null;
-
-            if (idx < currentIdx) {
-                el.classList.remove('opacity-30');
-                el.classList.add('opacity-100');
-                if (iconContainer) {
-                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-500";
-                    iconContainer.innerHTML = `<i class="fas fa-check text-[8px]"></i>`;
-                }
-                if (labelEl) labelEl.className = "text-brand-accent hidden lg:inline transition-colors duration-500";
-                if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-accent transition-colors duration-500";
-            } else if (idx === currentIdx) {
-                el.classList.remove('opacity-30');
-                el.classList.add('opacity-100');
-                if (iconContainer) {
-                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(14,165,233,0.4)] animate-pulse transition-all duration-500";
-                    iconContainer.innerHTML = `<i class="fas ${config.icon} text-[8px]"></i>`;
-                }
-                if (labelEl) labelEl.className = "text-brand-primary hidden lg:inline transition-colors duration-500";
-                if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
-            } else {
-                el.classList.add('opacity-30');
-                el.classList.remove('opacity-100');
-                if (iconContainer) {
-                    iconContainer.className = "w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500";
-                    iconContainer.innerHTML = `<i class="fas ${config.icon} text-[8px]"></i>`;
-                }
-                if (labelEl) labelEl.className = "text-gray-400 hidden lg:inline transition-colors duration-500";
-                if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
-            }
-        });
     };
 
     // Generic accordion toggle logic (Closes adjacent panels automatically for dynamic scrolling)

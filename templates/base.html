@@ -133,47 +133,61 @@
                 <!-- Center: Compact Real-Time Header Stepper (Desktop/Tablet Layout) -->
                 <div class="hidden md:flex items-center gap-2 lg:gap-3 bg-black/50 border border-brand-border/80 rounded-full px-4 py-1.5 transition-all duration-500 opacity-0 translate-y-[-10px]" id="header-stepper" style="display: none;">
                     <!-- Step 1: Submit -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold transition-opacity duration-500" id="h-step-submit">
-                        <div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-[0_0_8px_rgba(14,165,233,0.4)] transition-all duration-500 text-[10px]">
+                    <div class="flex items-center gap-1 lg:gap-1.5" id="h-step-submit">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500">
                             <i class="fas fa-paper-plane text-[8px]"></i>
                         </div>
-                        <span class="text-brand-primary hidden lg:inline transition-colors duration-500">Submit <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
+                        <span class="text-gray-400 font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500">
+                            <span class="hidden lg:inline">Submit</span>
+                            <span class="step-timer opacity-75 font-normal tracking-tighter"></span>
+                        </span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-1"></div>
                     
                     <!-- Step 2: Discover -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-discover">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
+                    <div class="flex items-center gap-1 lg:gap-1.5" id="h-step-discover">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500">
                             <i class="fas fa-sitemap text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Discover <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
+                        <span class="text-gray-400 font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500">
+                            <span class="hidden lg:inline">Discover</span>
+                            <span class="step-timer opacity-75 font-normal tracking-tighter"></span>
+                        </span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-2"></div>
                     
                     <!-- Step 3: Scrape -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-scrape">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
+                    <div class="flex items-center gap-1 lg:gap-1.5" id="h-step-scrape">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500">
                             <i class="fas fa-file-alt text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Scrape <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
+                        <span class="text-gray-400 font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500">
+                            <span class="hidden lg:inline">Scrape</span>
+                            <span class="step-timer opacity-75 font-normal tracking-tighter"></span>
+                        </span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-3"></div>
                     
                     <!-- Step 4: Analyze -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-analyze">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
+                    <div class="flex items-center gap-1 lg:gap-1.5" id="h-step-analyze">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500">
                             <i class="fas fa-robot text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Analyze <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
+                        <span class="text-gray-400 font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500">
+                            <span class="hidden lg:inline">Analyze</span>
+                            <span class="step-timer opacity-75 font-normal tracking-tighter"></span>
+                        </span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-4"></div>
                     
                     <!-- Step 5: Ready -->
-                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-30 transition-opacity duration-500" id="h-step-ready">
-                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
+                    <div class="flex items-center gap-1 lg:gap-1.5" id="h-step-ready">
+                        <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500">
                             <i class="fas fa-flag-checkered text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Ready</span>
+                        <span class="text-gray-400 font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500">
+                            <span class="hidden lg:inline">Ready</span>
+                        </span>
                     </div>
                 </div>
 
@@ -248,76 +262,175 @@
 
     <!-- Stepper Timer Hook Core -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                let timerInterval;
-                let startTime;
-                let currentStep = null;
+        let timerInterval;
+        let startTime;
+        let currentStep = null;
 
-                if (typeof window.updateStepper === 'function') {
-                    const originalUpdate = window.updateStepper;
-                    
-                    window.updateStepper = function(step, message) {
-                        // 1. Process previous step configurations
-                        if (timerInterval) {
-                            clearInterval(timerInterval);
-                            if (currentStep) {
-                                const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-                                const stepEl = document.getElementById('h-step-' + currentStep);
-                                if (stepEl) {
-                                    const timerSpan = stepEl.querySelector('.step-timer');
-                                    if (timerSpan) timerSpan.textContent = `(${finalTime}s)`;
-                                }
-                            }
-                        }
-                        
-                        // 2. Fall back to local stepper layout adjustments
-                        originalUpdate(step, message);
-                        
-                        // 3. Initiate current step monitoring values
-                        if (step !== 'complete' && step !== 'ready') {
-                            startTime = Date.now();
-                            currentStep = step;
-                            
-                            const stepEl = document.getElementById('h-step-' + step);
-                            const mobileTimer = document.getElementById('mobile-step-timer');
-                            
-                            timerInterval = setInterval(() => {
-                                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-                                if (stepEl) {
-                                    const timerSpan = stepEl.querySelector('.step-timer');
-                                    if (timerSpan) timerSpan.textContent = `(${elapsed}s)`;
-                                }
-                                if (mobileTimer) {
-                                    mobileTimer.textContent = `(${elapsed}s)`;
-                                }
-                            }, 100);
-                        } else {
-                            const mobileTimer = document.getElementById('mobile-step-timer');
-                            if (mobileTimer) mobileTimer.textContent = '';
-                        }
-                    };
-                }
+        // Globally registered stepper updater that coordinates both desktop & mobile UI + timers instantly
+        window.updateStepper = function(step, message) {
+            const headerStepper = document.getElementById('header-stepper');
+            const headerStepperMobile = document.getElementById('header-stepper-mobile');
+            const headerStepperMobileText = document.getElementById('header-stepper-mobile-text');
+            const statusMsg = document.getElementById('stepper-status-msg');
+            const progressBar = document.getElementById('top-progress-bar');
+            
+            const stepWidths = {
+                submit: '20%',
+                discover: '40%',
+                scrape: '60%',
+                analyze: '80%',
+                complete: '100%',
+                ready: '100%'
+            };
 
-                // Reset configuration variables during audit clearing
-                if (typeof window.resetAudit === 'function') {
-                    const originalReset = window.resetAudit;
-                    window.resetAudit = function() {
-                        if (timerInterval) clearInterval(timerInterval);
-                        document.querySelectorAll('.step-timer').forEach(el => el.textContent = '');
-                        const mobileTimer = document.getElementById('mobile-step-timer');
-                        if (mobileTimer) mobileTimer.textContent = '';
-                        
-                        const progressBar = document.getElementById('top-progress-bar');
-                        if (progressBar) {
-                            progressBar.style.width = '0%';
-                            progressBar.style.opacity = '1';
-                        }
-                        originalReset();
-                    };
+            // 1. Advance Glowing Progress Bar
+            if (progressBar && stepWidths[step]) {
+                progressBar.style.width = stepWidths[step];
+                if (step === 'complete' || step === 'ready') {
+                    setTimeout(() => {
+                        progressBar.style.opacity = '0';
+                    }, 800);
+                } else {
+                    progressBar.style.opacity = '1';
                 }
-            }, 200);
-        });
+            }
+            
+            // 2. Refresh Status Log
+            if (statusMsg && message) {
+                statusMsg.textContent = message;
+            }
+
+            // 3. Mount Transition Classes
+            if (headerStepper) {
+                headerStepper.style.display = 'flex';
+                void headerStepper.offsetWidth; 
+                headerStepper.classList.remove('opacity-0', 'translate-y-[-10px]');
+                headerStepper.classList.add('opacity-100', 'translate-y-0');
+            }
+            if (headerStepperMobile) {
+                headerStepperMobile.style.display = 'flex';
+                void headerStepperMobile.offsetWidth;
+                headerStepperMobile.classList.remove('opacity-0');
+                headerStepperMobile.classList.add('opacity-100');
+            }
+
+            const steps = ['submit', 'discover', 'scrape', 'analyze', 'complete'];
+            const currentIdx = steps.indexOf(step);
+            if (currentIdx === -1) return;
+
+            // 4. Set Mobile Status Label
+            if (headerStepperMobileText) {
+                const labels = {
+                    submit: 'Step 1/5',
+                    discover: 'Step 2/5',
+                    scrape: 'Step 3/5',
+                    analyze: 'Step 4/5',
+                    complete: 'Step 5/5'
+                };
+                headerStepperMobileText.textContent = labels[step] || `Step ${currentIdx + 1}/5`;
+            }
+
+            // 5. Update Desktop Stepper Configurations
+            const stepConfigs = {
+                submit: { id: 'h-step-submit', icon: 'fa-paper-plane', lineId: 'h-line-1' },
+                discover: { id: 'h-step-discover', icon: 'fa-sitemap', lineId: 'h-line-2' },
+                scrape: { id: 'h-step-scrape', icon: 'fa-file-alt', lineId: 'h-line-3' },
+                analyze: { id: 'h-step-analyze', icon: 'fa-robot', lineId: 'h-line-4' },
+                ready: { id: 'h-step-ready', icon: 'fa-flag-checkered' }
+            };
+
+            Object.keys(stepConfigs).forEach((key, idx) => {
+                const config = stepConfigs[key];
+                const el = document.getElementById(config.id);
+                if (!el) return;
+
+                const iconContainer = el.querySelector('.w-5');
+                const labelEl = el.querySelector('span');
+                const lineEl = config.lineId ? document.getElementById(config.lineId) : null;
+
+                if (idx < currentIdx) {
+                    el.classList.remove('opacity-30');
+                    el.classList.add('opacity-100');
+                    if (iconContainer) {
+                        iconContainer.className = "w-5 h-5 rounded-full bg-brand-accent text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-500";
+                        iconContainer.innerHTML = `<i class="fas fa-check text-[8px]"></i>`;
+                    }
+                    if (labelEl) labelEl.className = "text-brand-accent font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500";
+                    if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-accent transition-colors duration-500";
+                } else if (idx === currentIdx) {
+                    el.classList.remove('opacity-30');
+                    el.classList.add('opacity-100');
+                    if (iconContainer) {
+                        iconContainer.className = "w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[9px] shadow-[0_0_8px_rgba(14,165,233,0.4)] animate-pulse transition-all duration-500";
+                        iconContainer.innerHTML = `<i class="fas ${config.icon} text-[8px]"></i>`;
+                    }
+                    if (labelEl) labelEl.className = "text-brand-primary font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500";
+                    if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
+                } else {
+                    el.classList.add('opacity-30');
+                    el.classList.remove('opacity-100');
+                    if (iconContainer) {
+                        iconContainer.className = "w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center text-[9px] transition-all duration-500";
+                        iconContainer.innerHTML = `<i class="fas ${config.icon} text-[8px]"></i>`;
+                    }
+                    if (labelEl) labelEl.className = "text-gray-400 font-mono font-bold text-[10px] lg:text-[11px] flex items-center gap-0.5 transition-colors duration-500";
+                    if (lineEl) lineEl.className = "w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500";
+                }
+            });
+
+            // 6. Manage Live Process Timers (Executed instantly on submit)
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                if (currentStep) {
+                    const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+                    const stepEl = document.getElementById('h-step-' + currentStep);
+                    if (stepEl) {
+                        const timerSpan = stepEl.querySelector('.step-timer');
+                        if (timerSpan) timerSpan.textContent = `(${finalTime}s)`;
+                    }
+                }
+            }
+
+            if (step !== 'complete' && step !== 'ready') {
+                startTime = Date.now();
+                currentStep = step;
+                
+                const stepEl = document.getElementById('h-step-' + step);
+                const mobileTimer = document.getElementById('mobile-step-timer');
+                
+                timerInterval = setInterval(() => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    if (stepEl) {
+                        const timerSpan = stepEl.querySelector('.step-timer');
+                        if (timerSpan) timerSpan.textContent = `(${elapsed}s)`;
+                    }
+                    if (mobileTimer) {
+                        mobileTimer.textContent = `(${elapsed}s)`;
+                    }
+                }, 100);
+            } else {
+                const mobileTimer = document.getElementById('mobile-step-timer');
+                if (mobileTimer) mobileTimer.textContent = '';
+            }
+        };
+
+        window.resetAudit = function() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.querySelectorAll('.step-timer').forEach(el => el.textContent = '');
+            const mobileTimer = document.getElementById('mobile-step-timer');
+            if (mobileTimer) mobileTimer.textContent = '';
+            
+            const progressBar = document.getElementById('top-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+                progressBar.style.opacity = '1';
+            }
+
+            // Propagate clear requests to client files
+            if (typeof window.localResetAudit === 'function') {
+                window.localResetAudit();
+            }
+        };
     </script>
 
     {% block scripts %}{% endblock %}
