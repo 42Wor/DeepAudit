@@ -6,16 +6,17 @@ from urllib.parse import urljoin, urlparse, urlunparse
 from typing import List
 import httpx
 from lxml import html
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ---------------------------------------------------------------------------
-# Configuration & Safety Filters (Skips Auth but Allows Public Pages)
+# Configuration & Safety Filters
 # ---------------------------------------------------------------------------
 
 EXCLUSION_KEYWORDS = [
     "login", "signin", "signup", "register", "auth", "admin", "dashboard",
     "cart", "checkout", "my-account", "account", "settings",
-    "wp-admin", "logout", "reset-password", "billing", "payment", 
-    "subscribe", "unsubscribe", "verify", "confirmation", "password-reset", 
+    "wp-admin", "logout", "reset-password", "billing", "payment",
+    "subscribe", "unsubscribe", "verify", "confirmation", "password-reset",
     "forgot-password", "api", "graphql", "rest", "webhook", "callback", "oauth"
 ]
 
@@ -28,376 +29,363 @@ EXCLUDED_EXTENSIONS = (
 )
 
 USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0; +https://neeura.ai/bot)'
+MAX_WORKERS = 5  # Number of parallel HTTP requests
+POLITE_DELAY = 0.1  # Small delay per request (in seconds)
 
 # ---------------------------------------------------------------------------
-# URL Validation & Normalization (Fixed Vercel Trailing Slash Bug)
+# URL Validation & Normalization
 # ---------------------------------------------------------------------------
 
 def normalize_url(url: str) -> str:
-    """Normalize URL by removing fragments and standardizing format safely without breaking Vercel paths."""
     parsed = list(urlparse(url))
-    parsed[5] = ''  # Remove fragment (#heading)
-    
-    # Standardize empty path or root slash to avoid duplicates
+    parsed[5] = ''  # Remove fragment
     path = parsed[2]
     if not path or path == '/':
         path = '/'
     parsed[2] = path
-    
-    parsed[0] = parsed[0].lower() # Scheme (http/https)
-    parsed[1] = parsed[1].lower() # Netloc (domain)
-    
-    # Do NOT strip trailing slashes from directories (e.g. keep /project/ as is to avoid Vercel 404s)
+    parsed[0] = parsed[0].lower()
+    parsed[1] = parsed[1].lower()
     return urlunparse(parsed)
 
 def is_public_url(url: str, base_domain: str) -> bool:
-    """
-    Check if URL is public, belongs to the same domain,
-    and is safe from infinite loops (system/query/assets).
-    """
     try:
         parsed = urlparse(url)
-        
-        # Keep crawling restricted to current domain
         if parsed.netloc != base_domain:
             return False
-            
         if parsed.scheme not in ('http', 'https'):
             return False
-            
         if parsed.path.lower().endswith(EXCLUDED_EXTENSIONS):
             return False
-            
-        # Filter typical system, loop-prone, or auth URLs (keeps profile/policy/faq)
         normalized_url = url.lower()
         for keyword in EXCLUSION_KEYWORDS:
             if keyword in normalized_url:
                 return False
-                
-        # Limit total parameters to block infinite query loops (?sort=1&page=2...)
         if len(parsed.query.split('&')) > 5:
             return False
-            
         return True
     except Exception:
         return False
 
 # ---------------------------------------------------------------------------
-# Dynamic Sitemap Discovery (Robots.txt & Standard Paths)
+# Dynamic Sitemap Discovery (Parallel)
 # ---------------------------------------------------------------------------
 
-def discover_sitemap_urls(base_url: str, client: httpx.Client) -> List[str]:
-    """Find sitemap URLs dynamically via robots.txt and common standard locations."""
-    sitemaps = []
-    
-    # 1. Attempt to parse robots.txt for "Sitemap:" declarations
+def discover_sitemap_urls(base_url: str) -> List[str]:
+    """Find sitemap URLs via robots.txt and common paths in parallel."""
     robots_url = urljoin(base_url, '/robots.txt')
-    try:
-        resp = client.get(robots_url, timeout=5.0)
-        if resp.status_code == 200:
-            matches = re.findall(r'^[Ss]itemap:\s*(https?://\S+)', resp.text, re.MULTILINE)
-            for match in matches:
-                normalized = normalize_url(match.strip())
-                if normalized not in sitemaps:
-                    sitemaps.append(normalized)
-    except Exception as e:
-        print(f"   [Sitemap] Robots.txt check skipped: {e}")
-
-    # 2. Add common standard fallbacks
     common_paths = [
-        '/sitemap.xml',
-        '/sitemap_index.xml',
-        '/sitemap.txt',
-        '/wp-sitemap.xml'
+        '/sitemap.xml', '/sitemap_index.xml',
+        '/sitemap.txt', '/wp-sitemap.xml'
     ]
-    for path in common_paths:
+
+    def fetch_robots():
+        try:
+            with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
+                resp = client.get(robots_url)
+                if resp.status_code == 200:
+                    matches = re.findall(r'^[Ss]itemap:\s*(https?://\S+)', resp.text, re.MULTILINE)
+                    return [normalize_url(m.strip()) for m in matches]
+        except Exception as e:
+            print(f"   [Sitemap] Robots.txt check skipped: {e}")
+        return []
+
+    def check_common_path(path):
         full_url = urljoin(base_url, path)
-        if full_url not in sitemaps:
-            sitemaps.append(full_url)
-            
+        try:
+            with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
+                resp = client.head(full_url)
+                if resp.status_code == 200:
+                    return full_url
+        except Exception:
+            pass
+        return None
+
+    sitemaps = fetch_robots()
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = [executor.submit(check_common_path, path) for path in common_paths]
+        for future in as_completed(futures):
+            result = future.result()
+            if result and result not in sitemaps:
+                sitemaps.append(result)
+
     return sitemaps
 
 # ---------------------------------------------------------------------------
-# Sitemap Parser (XML, Sitemap Index, & Plain Text)
+# Sitemap Parser (Recursive with parallel sub‑sitemap fetching)
 # ---------------------------------------------------------------------------
 
-def parse_sitemap(sitemap_url: str, client: httpx.Client, base_domain: str, max_links: int) -> List[str]:
-    """Recursively parse XML Sitemaps, Sitemap Indexes, or plain Text sitemaps."""
+def parse_sitemap(sitemap_url: str, base_domain: str, max_links: int) -> List[str]:
     urls = []
     try:
-        resp = client.get(sitemap_url, timeout=5.0)
+        with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
+            resp = client.get(sitemap_url)
         if resp.status_code != 200:
             return []
-            
+
         content_type = resp.headers.get('content-type', '').lower()
-        
-        # 1. Plain Text Sitemaps (.txt or text/plain format)
+
+        # Plain text sitemap
         if sitemap_url.endswith('.txt') or 'text/plain' in content_type:
             for line in resp.text.splitlines():
-                clean_url = normalize_url(line.strip())
-                if is_public_url(clean_url, base_domain):
-                    urls.append(clean_url)
+                clean = normalize_url(line.strip())
+                if is_public_url(clean, base_domain):
+                    urls.append(clean)
                     if len(urls) >= max_links:
                         return urls
             return urls
 
-        # 2. XML Sitemap & Sitemap Index Parsing
+        # XML parsing
         try:
             root = ET.fromstring(resp.content)
             ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
-            
-            # Check if it's a Sitemap Index pointing to nested sitemaps
+
+            # Check for sitemap index
             sitemaps_locs = root.findall('.//sm:sitemap/sm:loc', ns)
             if not sitemaps_locs:
-                sitemaps_locs = root.findall('.//sitemap/loc') # Fallback if no namespace
-                
+                sitemaps_locs = root.findall('.//sitemap/loc')
+
             if sitemaps_locs:
                 print(f"   [Sitemap Index] Navigating sitemap index hierarchy...")
-                # Recurse first 3 sub-sitemaps to prevent deep infinite loop lookups
-                for sub_sitemap in sitemaps_locs[:3]:
-                    sub_url = sub_sitemap.text.strip()
-                    urls.extend(parse_sitemap(sub_url, client, base_domain, max_links - len(urls)))
-                    if len(urls) >= max_links:
-                        break
-                return urls
-            
-            # Parse typical urlset sitemap
+                # Fetch first 3 sub‑sitemaps in parallel
+                sub_urls = [loc.text.strip() for loc in sitemaps_locs[:3]]
+                with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, 3)) as executor:
+                    futures = {executor.submit(parse_sitemap, sub_url, base_domain, max_links - len(urls)): sub_url
+                               for sub_url in sub_urls}
+                    for future in as_completed(futures):
+                        urls.extend(future.result())
+                        if len(urls) >= max_links:
+                            break
+                return list(dict.fromkeys(urls))
+
+            # Normal URL set
             url_locs = root.findall('.//sm:url/sm:loc', ns)
             if not url_locs:
                 url_locs = root.findall('.//url/loc')
-                
+
             for loc in url_locs:
                 if loc.text:
-                    clean_url = normalize_url(loc.text.strip())
-                    if is_public_url(clean_url, base_domain):
-                        urls.append(clean_url)
+                    clean = normalize_url(loc.text.strip())
+                    if is_public_url(clean, base_domain):
+                        urls.append(clean)
                         if len(urls) >= max_links:
                             break
-                            
         except ET.ParseError:
-            # Simple RegEx fallback extraction if XML structure is partially broken
-            found_urls = re.findall(r'https?://[^\s<>"]+', resp.text)
-            for found_url in found_urls:
-                clean_url = normalize_url(found_url)
-                if is_public_url(clean_url, base_domain):
-                    urls.append(clean_url)
+            # Fallback regex extraction
+            found = re.findall(r'https?://[^\s<>"]+', resp.text)
+            for f_url in found:
+                clean = normalize_url(f_url)
+                if is_public_url(clean, base_domain):
+                    urls.append(clean)
                     if len(urls) >= max_links:
                         break
-                        
     except Exception as e:
         print(f"   [Sitemap] Error reading {sitemap_url}: {e}")
-        
+
     return list(dict.fromkeys(urls))
 
 # ---------------------------------------------------------------------------
-# Fallback BFS Crawler (Depth 3 & Interactive Element Scan)
+# Parallel BFS Crawler (Depth 3, each depth level parallel)
 # ---------------------------------------------------------------------------
 
 def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int) -> List[str]:
-    """BFS crawling using lxml (No BS4). Scans standard links, button onclicks, and custom attributes."""
     visited = set()
     normalized_start = normalize_url(start_url)
-    queue = [(normalized_start, 0)]  # Queue stores tuples of (Normalized URL, depth)
-    discovered_urls = []
-    
-    # Maximum click distance from home page set to 3 to access nested views
-    MAX_DEPTH = 3 
-    
-    with httpx.Client(timeout=8.0, follow_redirects=True, headers={'User-Agent': USER_AGENT}) as client:
-        while queue and len(discovered_urls) < max_links:
-            current_url, depth = queue.pop(0)
-            
-            if current_url in visited:
-                continue
-                
-            visited.add(current_url)
-            print(f"   [Crawl] Scanning: {current_url} (Depth: {depth}/{MAX_DEPTH})")
-            
-            try:
-                # Polite delay
-                time.sleep(0.5)
-                
-                response = client.get(current_url)
-                # Skip 404 or other errors
+    queue = [(normalized_start, 0)]
+    discovered = []
+    MAX_DEPTH = 3
+
+    def fetch_page(url, depth):
+        """Fetch and parse a single page, returning discovered links."""
+        time.sleep(POLITE_DELAY)  # Small courtesy delay
+        try:
+            with httpx.Client(timeout=8.0, follow_redirects=True,
+                              headers={'User-Agent': USER_AGENT}) as client:
+                response = client.get(url)
                 if response.status_code != 200 or 'text/html' not in response.headers.get('content-type', ''):
-                    continue
-                
-                discovered_urls.append(current_url)
-                
-                # Enforce depth safety limit
-                if depth >= MAX_DEPTH:
-                    continue
-                
-                # Parse HTML with lxml
+                    return url, None, depth
+
                 tree = html.fromstring(response.content)
-                tree.make_links_absolute(current_url)
-                
-                # Group for keeping track of links found on this page
+                tree.make_links_absolute(url)
+
                 standard_links = []
                 interactive_links = []
-                
-                # 1. Standard Anchor Tags
+
                 for link in tree.xpath('//a/@href'):
                     standard_links.append(link)
-                    
-                # 2. Button Interactive Elements (data-href or data-url configurations)
+
                 for btn_link in tree.xpath('//button/@data-href | //button/@data-url | //*[contains(@class, "btn")]/@data-href'):
-                    interactive_links.append(urljoin(current_url, btn_link))
-                    
-                # 3. Onclick Redirection Parser (Extracts paths/links from scripts)
+                    interactive_links.append(urljoin(url, btn_link))
+
                 for onclick in tree.xpath('//*[@onclick]/@onclick'):
                     matches = re.findall(r"['\"](/[^'\"]+)['\"]|['\"](https?://[^'\"]+)['\"]", onclick)
                     for match in matches:
                         found_path = match[0] if match[0] else match[1]
-                        interactive_links.append(urljoin(current_url, found_path))
+                        interactive_links.append(urljoin(url, found_path))
 
-                # 4. Global Raw Script Navigation Sniffer (Resolves navigateTo, location, etc. on single-page apps)
                 raw_js_matches = re.findall(r"(?:navigateTo|navigate|push|location\.href|location)\s*\(\s*['\"](/[^'\"]+)['\"]", response.text)
                 for r_match in raw_js_matches:
-                    interactive_links.append(urljoin(current_url, r_match))
-                
-                # Standardize, filter, and queue discovered links
-                valid_standard = []
-                valid_interactive = []
+                    interactive_links.append(urljoin(url, r_match))
 
-                for link in standard_links:
-                    clean_link = normalize_url(link)
-                    if is_public_url(clean_link, base_domain) and clean_link not in visited and clean_link not in [q[0] for q in queue]:
-                        valid_standard.append(clean_link)
-                        queue.append((clean_link, depth + 1))
+                all_links = standard_links + interactive_links
+                valid_links = []
+                for link in all_links:
+                    clean = normalize_url(link)
+                    if is_public_url(clean, base_domain):
+                        valid_links.append(clean)
 
-                for link in interactive_links:
-                    clean_link = normalize_url(link)
-                    if is_public_url(clean_link, base_domain) and clean_link not in visited and clean_link not in [q[0] for q in queue]:
-                        valid_interactive.append(clean_link)
-                        queue.append((clean_link, depth + 1))
+                print(f"   [Crawl] {url} -> {len(valid_links)} new links")
+                return url, valid_links, depth
 
-                # Diagnostics Logging
-                if valid_standard:
-                    print(f"      [Found standard links]: {len(valid_standard)} items")
-                if valid_interactive:
-                    print(f"      [Found interactive button/script links]: {len(valid_interactive)} items -> {valid_interactive}")
-                        
-            except Exception as e:
-                print(f"   [Crawler] Exception crawling {current_url}: {e}")
-                continue
-                
-    return discovered_urls
+        except Exception as e:
+            print(f"   [Crawler] Exception on {url}: {e}")
+            return url, None, depth
+
+    # BFS with parallel same‑depth fetching
+    while queue and len(discovered) < max_links:
+        # Group all URLs of the current depth (lowest depth in queue)
+        current_depth = queue[0][1]
+        batch = []
+        while queue and queue[0][1] == current_depth:
+            batch.append(queue.pop(0))
+
+        if not batch:
+            continue
+
+        # Fetch all pages in this batch in parallel
+        with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(batch))) as executor:
+            futures = {executor.submit(fetch_page, url, depth): (url, depth) for url, depth in batch}
+            for future in as_completed(futures):
+                url, links, depth = future.result()
+                if url not in visited:
+                    visited.add(url)
+                    discovered.append(url)
+                    if len(discovered) >= max_links:
+                        break
+                    if links and depth < MAX_DEPTH:
+                        for link in links:
+                            if link not in visited and not any(q[0] == link for q in queue):
+                                queue.append((link, depth + 1))
+
+                if len(discovered) >= max_links:
+                    break
+
+    return discovered[:max_links]
 
 # ---------------------------------------------------------------------------
-# Core Interface Functions (Verification Included)
+# Core Discovery (Hybrid: Sitemap → BFS, parallel verification)
 # ---------------------------------------------------------------------------
 
 def discover_public_links(start_url: str, max_discovery: int = 6) -> List[str]:
-    """Hybrid approach: Crawls sitemaps first, falls back to BFS. Verifies 200 OK status on all results."""
     base_domain = urlparse(start_url).netloc
     normalized_start = normalize_url(start_url)
-    
-    with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
-        print("   [Crawler] Searching for public URLs via Sitemap sources...")
-        sitemap_candidates = discover_sitemap_urls(normalized_start, client)
-        
-        discovered_urls = []
-        for sitemap_url in sitemap_candidates:
-            urls = parse_sitemap(sitemap_url, client, base_domain, max_discovery)
-            discovered_urls.extend(urls)
-            if len(discovered_urls) >= max_discovery:
-                break
-                
-        if not discovered_urls:
-            print("   [Crawler] No Sitemap found. Activating loop-safe fallback crawler...")
-            discovered_urls = fallback_bfs_crawl(normalized_start, base_domain, max_discovery)
-            
-        # Deduplicate while preserving order
-        unique_urls = list(dict.fromkeys(discovered_urls))
-        
-        # Strict Verification: Filter out non-200 / 404 pages
-        verified_urls = []
-        print("   [Crawler] Verifying page statuses (dropping dead/404 links)...")
-        for url in unique_urls:
-            try:
-                resp = client.get(url, timeout=5.0)
-                if resp.status_code == 200:
-                    verified_urls.append(url)
-                    if len(verified_urls) >= max_discovery:
-                        break
-            except Exception:
-                continue
-                
-        return verified_urls
+
+    print("   [Crawler] Searching for public URLs via Sitemap sources...")
+    sitemap_candidates = discover_sitemap_urls(normalized_start)
+
+    discovered = []
+    for sitemap_url in sitemap_candidates:
+        urls = parse_sitemap(sitemap_url, base_domain, max_discovery)
+        discovered.extend(urls)
+        if len(discovered) >= max_discovery:
+            break
+
+    if not discovered:
+        print("   [Crawler] No Sitemap found. Activating loop-safe fallback crawler...")
+        discovered = fallback_bfs_crawl(normalized_start, base_domain, max_discovery)
+
+    unique_urls = list(dict.fromkeys(discovered))
+
+    # Verify all URLs are alive (200) in parallel
+    print("   [Crawler] Verifying page statuses (parallel)...")
+    verified = []
+
+    def check_url(url):
+        try:
+            with httpx.Client(timeout=5.0, headers={'User-Agent': USER_AGENT}) as client:
+                resp = client.get(url)
+                return (url, resp.status_code == 200)
+        except Exception:
+            return (url, False)
+
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(unique_urls))) as executor:
+        futures = {executor.submit(check_url, u): u for u in unique_urls}
+        for future in as_completed(futures):
+            url, ok = future.result()
+            if ok:
+                verified.append(url)
+                if len(verified) >= max_discovery:
+                    break
+
+    return verified
 
 # ---------------------------------------------------------------------------
-# Page Scraper (Using lxml)
+# Fast Page Scraper (used in parallel)
 # ---------------------------------------------------------------------------
 
 def scrape_page(url: str) -> str:
-    """Download page and extract clean text content using lxml."""
     try:
-        with httpx.Client(timeout=8.0, follow_redirects=True, headers={'User-Agent': USER_AGENT}) as client:
+        with httpx.Client(timeout=8.0, follow_redirects=True,
+                          headers={'User-Agent': USER_AGENT}) as client:
             response = client.get(url)
             if response.status_code != 200:
                 return ""
-            
+
             tree = html.fromstring(response.content)
-            
-            # Clean unwanted structural trees
-            tags_to_remove = ['script', 'style', 'nav', 'footer', 'header', 'aside', 'noscript', 'svg']
-            for tag in tags_to_remove:
+            for tag in ['script', 'style', 'nav', 'footer', 'header', 'aside', 'noscript', 'svg']:
                 for element in tree.xpath(f'//{tag}'):
                     element.drop_tree()
-            
-            # Extract content text
+
             text = tree.text_content()
-            
-            # Clean up whitespace
             text = re.sub(r'\s+', ' ', text).strip()
-            
             return text[:3000]
-            
     except Exception as e:
         print(f"   [Scraper] Error scraping {url}: {e}")
         return ""
 
 # ---------------------------------------------------------------------------
-# Scrape Orchestrator with Token Limits (Randomized limit: 25000 to 50000 tokens)
+# Parallel Scraping with Token Limit
 # ---------------------------------------------------------------------------
 
 def scrape_pages_with_limit(urls: List[str]) -> List[str]:
-    """
-    Scrapes a list of pages while strictly enforcing a random token limitation
-    to optimize API usage and avoid scraping excessive amounts of data.
-    """
-    # Generate an increased random token limit between 25000 and 50000 tokens
     token_limit = random.randint(25000, 50000)
     print(f"   [Limit] Dynamic token limit initialized: {token_limit} tokens.")
-    
+
+    # Scrape all pages in parallel
+    scraped = []
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(urls))) as executor:
+        futures = {executor.submit(scrape_page, url): url for url in urls}
+        for future in as_completed(futures):
+            url = futures[future]
+            text = future.result()
+            scraped.append((url, text))
+
+    # Sort back to original order
+    scraped.sort(key=lambda x: urls.index(x[0]))
+
     cumulative_tokens = 0
-    scraped_data_list = []
-    
-    for i, page_url in enumerate(urls, 1):
-        print(f"   [{i}/{len(urls)}] Scraping: {page_url}")
-        text = scrape_page(page_url)
+    result = []
+    for idx, (page_url, text) in enumerate(scraped, 1):
+        print(f"   [{idx}/{len(urls)}] Scraping: {page_url}")
         if not text:
             print(f"      [Scrape Error] Empty content or failed fetch for {page_url}")
             continue
-            
-        page_tokens = len(text) // 4  # Standard 1 token ≈ 4 characters rule
+
+        page_tokens = len(text) // 4
         print(f"      [Tokens] Scraped: {len(text)} chars (~{page_tokens} tokens)")
-        
+
         if cumulative_tokens + page_tokens > token_limit:
-            # We reached the budget limit, truncate this last page to fit remaining space
-            remaining_tokens = token_limit - cumulative_tokens
-            if remaining_tokens > 100:  # Only append if there's significant space left
-                allowed_chars = remaining_tokens * 4
-                truncated_text = text[:allowed_chars] + "\n[Content truncated due to Deep Audit token limits]"
-                scraped_data_list.append(f"PAGE: {page_url}\nCONTENT: {truncated_text}\n---")
-                print(f"      [Limit] Content truncated to fit remaining space. Added {remaining_tokens} tokens.")
-            print(f"   [Limit] Strict token limit reached ({token_limit} tokens). Stopping further scraping.")
+            remaining = token_limit - cumulative_tokens
+            if remaining > 100:
+                truncated = text[:remaining * 4] + "\n[Content truncated due to Deep Audit token limits]"
+                result.append(f"PAGE: {page_url}\nCONTENT: {truncated}\n---")
+                print(f"      [Limit] Content truncated to fit. Added {remaining} tokens.")
+            print(f"   [Limit] Strict token limit reached ({token_limit} tokens). Stopping.")
             break
         else:
-            scraped_data_list.append(f"PAGE: {page_url}\nCONTENT: {text}\n---")
+            result.append(f"PAGE: {page_url}\nCONTENT: {text}\n---")
             cumulative_tokens += page_tokens
             print(f"      [Cumulative] Total tokens so far: {cumulative_tokens}/{token_limit}")
-            
+
     print(f"   [Limit] Final total estimated tokens consumed: {cumulative_tokens}/{token_limit}")
-    return scraped_data_list
+    return result
