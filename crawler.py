@@ -29,8 +29,7 @@ EXCLUDED_EXTENSIONS = (
 )
 
 USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0; +https://neeura.ai/bot)'
-MAX_WORKERS = 10  # Increased to 10 for faster parallel processing of up to 20 pages
-POLITE_DELAY = 0.1  # Small delay per request (in seconds)
+MAX_WORKERS = 30  # Massively increased for high-speed parallel I/O
 
 # Pre-compiled regular expression for faster filter parsing
 EXCLUSION_RE = re.compile('|'.join(re.escape(k) for k in EXCLUSION_KEYWORDS), re.IGNORECASE)
@@ -40,8 +39,8 @@ _SHARED_CLIENT = httpx.Client(
     headers={'User-Agent': USER_AGENT},
     timeout=5.0,
     limits=httpx.Limits(
-        max_keepalive_connections=50,  # Keep open pooled connections
-        max_connections=100,          # High limit for concurrent requests
+        max_keepalive_connections=100, # Increased pool size
+        max_connections=200,           # Allow massive concurrency
         keepalive_expiry=30.0
     ),
     follow_redirects=True
@@ -71,7 +70,6 @@ def is_public_url(url: str, base_domain: str) -> bool:
             return False
         if parsed.path.lower().endswith(EXCLUDED_EXTENSIONS):
             return False
-        # Fast regex match is much quicker than loop iterations
         if EXCLUSION_RE.search(url):
             return False
         if len(parsed.query.split('&')) > 5:
@@ -81,46 +79,40 @@ def is_public_url(url: str, base_domain: str) -> bool:
         return False
 
 # ---------------------------------------------------------------------------
-# Dynamic Sitemap Discovery (Parallel)
+# Dynamic Sitemap Discovery (Fully Parallel)
 # ---------------------------------------------------------------------------
 
 def discover_sitemap_urls(base_url: str, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
-    """Find sitemap URLs via robots.txt and common paths in parallel."""
-    robots_url = urljoin(base_url, '/robots.txt')
-    common_paths = [
-        '/sitemap.xml', '/sitemap_index.xml',
+    """Find sitemap URLs via robots.txt and common paths simultaneously."""
+    paths_to_check = [
+        '/robots.txt', '/sitemap.xml', '/sitemap_index.xml',
         '/sitemap.txt', '/wp-sitemap.xml'
     ]
+    sitemaps = []
 
-    def fetch_robots():
-        try:
-            resp = client.get(robots_url, timeout=4.0)
-            if resp.status_code == 200:
-                matches = re.findall(r'^[Ss]itemap:\s*(https?://\S+)', resp.text, re.MULTILINE)
-                return [normalize_url(m.strip()) for m in matches]
-        except Exception as e:
-            print(f"   [Sitemap] Robots.txt check skipped: {e}")
-        return []
-
-    def check_common_path(path):
+    def check_path(path):
         full_url = urljoin(base_url, path)
         try:
-            # Using HEAD prevents pulling unnecessary payload
-            resp = client.head(full_url, timeout=3.0)
-            if resp.status_code == 200:
-                return full_url
+            if path == '/robots.txt':
+                resp = client.get(full_url, timeout=3.0)
+                if resp.status_code == 200:
+                    matches = re.findall(r'^[Ss]itemap:\s*(https?://\S+)', resp.text, re.MULTILINE)
+                    return [normalize_url(m.strip()) for m in matches]
+            else:
+                resp = client.head(full_url, timeout=3.0)
+                if resp.status_code == 200:
+                    return [full_url]
         except Exception:
             pass
-        return None
+        return []
 
-    sitemaps = fetch_robots()
-
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [executor.submit(check_common_path, path) for path in common_paths]
+    # Blast all common paths and robots.txt at the exact same time
+    with ThreadPoolExecutor(max_workers=len(paths_to_check)) as executor:
+        futures = [executor.submit(check_path, path) for path in paths_to_check]
         for future in as_completed(futures):
-            result = future.result()
-            if result and result not in sitemaps:
-                sitemaps.append(result)
+            for found_url in future.result():
+                if found_url not in sitemaps:
+                    sitemaps.append(found_url)
 
     return sitemaps
 
@@ -159,9 +151,9 @@ def parse_sitemap(sitemap_url: str, base_domain: str, max_links: int, client: ht
 
             if sitemaps_locs:
                 print(f"   [Sitemap Index] Navigating sitemap index hierarchy...")
-                # Fetch first 3 sub‑sitemaps in parallel
-                sub_urls = [loc.text.strip() for loc in sitemaps_locs[:3]]
-                with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, 3)) as executor:
+                # Fetch up to 5 sub-sitemaps in parallel at full speed
+                sub_urls = [loc.text.strip() for loc in sitemaps_locs[:5]]
+                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                     futures = {executor.submit(parse_sitemap, sub_url, base_domain, max_links - len(urls), client): sub_url
                                for sub_url in sub_urls}
                     for future in as_completed(futures):
@@ -209,8 +201,6 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client:
 
     def fetch_page(url, depth):
         """Fetch and parse a single page, returning discovered links."""
-        if POLITE_DELAY > 0:
-            time.sleep(POLITE_DELAY)  # Small courtesy delay
         try:
             response = client.get(url, timeout=5.0)
             if response.status_code != 200 or 'text/html' not in response.headers.get('content-type', ''):
@@ -251,7 +241,6 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client:
 
     # BFS with parallel same‑depth fetching
     while queue and len(discovered) < max_links:
-        # Group all URLs of the current depth (lowest depth in queue)
         current_depth = queue[0][1]
         batch = []
         while queue and queue[0][1] == current_depth:
@@ -260,7 +249,6 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client:
         if not batch:
             continue
 
-        # Fetch all pages in this batch in parallel
         with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(batch))) as executor:
             futures = {executor.submit(fetch_page, url, depth): (url, depth) for url, depth in batch}
             for future in as_completed(futures):
@@ -285,13 +273,13 @@ def fallback_bfs_crawl(start_url: str, base_domain: str, max_links: int, client:
 # ---------------------------------------------------------------------------
 
 def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx.Client = _SHARED_CLIENT) -> List[str]:
-    """
-    max_discovery increased to 20 to scan up to 20 pages per website.
-    """
+    # OVERRIDE: Force max_discovery to 20 to ignore legacy limits passed from app.py
+    max_discovery = 20
+    
     base_domain = urlparse(start_url).netloc
     normalized_start = normalize_url(start_url)
 
-    print("   [Crawler] Searching for public URLs via Sitemap sources...")
+    print(f"   [Crawler] Searching for up to {max_discovery} public URLs via Sitemap sources...")
     sitemap_candidates = discover_sitemap_urls(normalized_start, client)
 
     discovered = []
@@ -325,7 +313,8 @@ def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx
             pass
         return (url, False)
 
-    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(unique_urls))) as executor:
+    # Use double the workers for verification since HEAD requests are extremely fast
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS * 2, len(unique_urls))) as executor:
         futures = {executor.submit(check_url, u): u for u in unique_urls}
         for future in as_completed(futures):
             url, ok = future.result()
@@ -363,7 +352,7 @@ def scrape_page(url: str, client: httpx.Client = _SHARED_CLIENT) -> str:
 # ---------------------------------------------------------------------------
 
 def scrape_pages_with_limit(urls: List[str], client: httpx.Client = _SHARED_CLIENT) -> List[str]:
-    token_limit = random.randint(50000, 80000)
+    token_limit = random.randint(100000, 180000)
     print(f"   [Limit] Dynamic token limit initialized: {token_limit} tokens.")
 
     # Scrape all pages in parallel using the pooled connection pool

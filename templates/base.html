@@ -134,7 +134,7 @@
                         <div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-[0_0_8px_rgba(14,165,233,0.4)] transition-all duration-500 text-[10px]">
                             <i class="fas fa-paper-plane text-[8px]"></i>
                         </div>
-                        <span class="text-brand-primary hidden lg:inline transition-colors duration-500">Submit</span>
+                        <span class="text-brand-primary hidden lg:inline transition-colors duration-500">Submit <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-1"></div>
                     
@@ -143,7 +143,7 @@
                         <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-sitemap text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Discover</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Discover <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-2"></div>
                     
@@ -152,7 +152,7 @@
                         <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-file-alt text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Scrape</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Scrape <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-3"></div>
                     
@@ -161,7 +161,7 @@
                         <div class="w-5 h-5 rounded-full bg-brand-card text-gray-500 flex items-center justify-center transition-all duration-500 text-[10px]">
                             <i class="fas fa-robot text-[8px]"></i>
                         </div>
-                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Analyze</span>
+                        <span class="text-gray-400 hidden lg:inline transition-colors duration-500">Analyze <span class="step-timer opacity-75 font-normal ml-0.5 tracking-tighter"></span></span>
                     </div>
                     <div class="w-6 lg:w-8 h-[2px] bg-brand-border transition-colors duration-500" id="h-line-4"></div>
                     
@@ -178,6 +178,7 @@
                 <div class="flex md:hidden items-center bg-brand-primary/10 border border-brand-primary/30 rounded-full px-3 py-1 text-[11px] font-mono font-bold text-brand-primary gap-1.5 animate-pulse transition-all duration-500 opacity-0" id="header-stepper-mobile" style="display: none;">
                     <i class="fas fa-spinner fa-spin text-[10px]"></i>
                     <span id="header-stepper-mobile-text">Step 1/5</span>
+                    <span id="mobile-step-timer" class="opacity-75 font-normal ml-0.5 tracking-tighter"></span>
                 </div>
                 
                 <!-- Right Fresh Start control -->
@@ -241,6 +242,77 @@
             </div>
         </div>
     </footer>
+
+    <!-- Real-Time Stepper Timer Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Slight delay to ensure index.html scripts are fully loaded and hoisted
+            setTimeout(() => {
+                let timerInterval;
+                let startTime;
+                let currentStep = null;
+
+                // Hook into the existing updateStepper function from index.html
+                if (typeof window.updateStepper === 'function') {
+                    const originalUpdate = window.updateStepper;
+                    
+                    window.updateStepper = function(step, message) {
+                        // 1. Stop previous timer and lock in the final time
+                        if (timerInterval) {
+                            clearInterval(timerInterval);
+                            if (currentStep) {
+                                const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+                                const stepEl = document.getElementById('h-step-' + currentStep);
+                                if (stepEl) {
+                                    const timerSpan = stepEl.querySelector('.step-timer');
+                                    if (timerSpan) timerSpan.textContent = `(${finalTime}s)`;
+                                }
+                            }
+                        }
+                        
+                        // 2. Call the original function to update UI colors and icons
+                        originalUpdate(step, message);
+                        
+                        // 3. Start new timer for the new step
+                        if (step !== 'complete' && step !== 'ready') {
+                            startTime = Date.now();
+                            currentStep = step;
+                            
+                            const stepEl = document.getElementById('h-step-' + step);
+                            const mobileTimer = document.getElementById('mobile-step-timer');
+                            
+                            timerInterval = setInterval(() => {
+                                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                                if (stepEl) {
+                                    const timerSpan = stepEl.querySelector('.step-timer');
+                                    if (timerSpan) timerSpan.textContent = `(${elapsed}s)`;
+                                }
+                                if (mobileTimer) {
+                                    mobileTimer.textContent = `(${elapsed}s)`;
+                                }
+                            }, 100);
+                        } else {
+                            // Clear mobile timer when completely finished
+                            const mobileTimer = document.getElementById('mobile-step-timer');
+                            if (mobileTimer) mobileTimer.textContent = '';
+                        }
+                    };
+                }
+
+                // Hook into resetAudit to clear timers on "Fresh Start"
+                if (typeof window.resetAudit === 'function') {
+                    const originalReset = window.resetAudit;
+                    window.resetAudit = function() {
+                        if (timerInterval) clearInterval(timerInterval);
+                        document.querySelectorAll('.step-timer').forEach(el => el.textContent = '');
+                        const mobileTimer = document.getElementById('mobile-step-timer');
+                        if (mobileTimer) mobileTimer.textContent = '';
+                        originalReset();
+                    };
+                }
+            }, 200);
+        });
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>
