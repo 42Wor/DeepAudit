@@ -29,7 +29,7 @@ EXCLUDED_EXTENSIONS = (
 )
 
 USER_AGENT = 'Mozilla/5.0 (compatible; DeepAuditBot/1.0; +https://neeura.ai/bot)'
-MAX_WORKERS = 30  # Massively increased for high-speed parallel I/O
+MAX_WORKERS = 23  # Massively increased for high-speed parallel I/O
 
 # Pre-compiled regular expression for faster filter parsing
 EXCLUSION_RE = re.compile('|'.join(re.escape(k) for k in EXCLUSION_KEYWORDS), re.IGNORECASE)
@@ -285,7 +285,7 @@ def discover_public_links(start_url: str, max_discovery: int = 20, client: httpx
     print(f"   [Crawler] Verifying target website status and accessibility: {start_url}")
     try:
         # Ping the target's homepage with a structured GET request
-        probe_resp = client.get(start_url, timeout=4.0)
+        probe_resp = client.get(start_url, timeout=15.0)
         
         # Explicitly handle bad HTTP response codes to prevent wasting crawling resources
         if probe_resp.status_code >= 400:

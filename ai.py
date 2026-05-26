@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 
 # ===========================================================================
-# Updated Native Schema Definition (Streamlined - No Unused Fields)
+# Native Schema Definition (Streamlined - No Unused Fields)
 # ===========================================================================
 
 audit_report_schema = {
@@ -124,8 +124,17 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
     try:
         client = _get_gemini_client()
         
-        print(f"   [AI] Cached Gemini Client retrieved.")
-        print(f"   [AI] Sending content to Gemini (gemini-3.1-flash-lite) for structured audit...")
+        # Calculate approximate query metrics
+        estimated_tokens = len(combined_text) // 4
+        
+        # Structured visual logger in console
+        print("\n" + "-" * 60)
+        print("🧠 [AI] Initiating Gemini Structured Query")
+        print(f"   Model:            gemini-3.1-flash-lite")
+        print(f"   Payload Chars:    {len(combined_text):,} characters")
+        print(f"   Est. Prompt Size: ~{estimated_tokens:,} tokens")
+        print("   Temperature:      0.25")
+        print("-" * 60)
         
         config_args = {
             "temperature": 0.25, 
@@ -145,7 +154,7 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
             )
         }
         
-        # Enable low-latency fast response config if supported by model/SDK version
+        # Check for thinking config support
         try:
             if hasattr(types, "ThinkingConfig"):
                 config_args["thinking_config"] = types.ThinkingConfig(
@@ -161,6 +170,10 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
         )
         
         result_json = json.loads(response.text)
+        
+        print("🧠 [AI] Gemini response received and parsed successfully.")
+        print("-" * 60 + "\n")
+        
         return result_json
         
     except Exception as e:

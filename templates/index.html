@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Hero Section (Responsive font scaling for mobile viewports below 440px) -->
+<!-- Hero Section -->
 <div id="hero-wrapper" class="text-center py-6 sm:py-16 px-2 mb-2 max-w-4xl mx-auto transition-all duration-700">
     <div class="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mb-6 text-[10px] min-[380px]:text-xs font-mono tracking-wider uppercase text-gray-500">
         <span>Developed by <a href="https://github.com/42Wor" target="_blank" class="text-gray-300 font-semibold hover:text-brand-primary transition-colors">Maaz Waheed</a></span>
@@ -20,15 +20,25 @@
 
 <!-- Search Bar / Form -->
 <div id="search-container" class="glass-card rounded-2xl p-2.5 sm:p-4 lg:p-6 mb-8 sm:mb-12 max-w-4xl mx-auto relative z-20 transition-all duration-700">
-    <form id="audit-form" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <div class="relative flex-grow">
-            <i class="fas fa-globe absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-base sm:text-lg"></i>
-            <input type="text" id="url-input" required placeholder="https://yourwebsite.com" 
-                   class="w-full bg-black/40 border border-brand-border rounded-xl py-3.5 pl-11 pr-3.5 sm:py-4 sm:pl-12 sm:pr-4 text-sm sm:text-base lg:text-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner">
+    <form id="audit-form" class="flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div class="relative flex-grow">
+                <i class="fas fa-globe absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-base sm:text-lg"></i>
+                <input type="text" id="url-input" required placeholder="https://yourwebsite.com" 
+                       class="w-full bg-black/40 border border-brand-border rounded-xl py-3.5 pl-11 pr-3.5 sm:py-4 sm:pl-12 sm:pr-4 text-sm sm:text-base lg:text-lg text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner">
+            </div>
+            <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-3.5 px-6 sm:py-4 sm:px-8 rounded-xl transition-all flex items-center justify-center gap-2.5 sm:gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-sm sm:text-base lg:text-lg">
+                <i class="fas fa-magic"></i> <span>Generate Audit</span>
+            </button>
         </div>
-        <button type="submit" id="submit-btn" class="bg-gradient-to-r from-brand-primary to-brand-secondary hover:opacity-90 text-white font-bold py-3.5 px-6 sm:py-4 sm:px-8 rounded-xl transition-all flex items-center justify-center gap-2.5 sm:gap-3 whitespace-nowrap shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] text-sm sm:text-base lg:text-lg">
-            <i class="fas fa-magic"></i> <span>Generate Audit</span>
-        </button>
+        
+        <!-- Custom Cache Bypass Trigger -->
+        <div class="flex items-center gap-2 mt-1 ml-1 select-none">
+            <input type="checkbox" id="nocache-checkbox" class="w-4 h-4 rounded bg-black/40 border-brand-border text-brand-primary focus:ring-brand-primary/30 focus:ring-2 accent-brand-primary cursor-pointer">
+            <label for="nocache-checkbox" class="text-xs font-mono font-bold text-gray-400 cursor-pointer hover:text-white transition-colors">
+                Force Re-crawl (Bypass Cache)
+            </label>
+        </div>
     </form>
 </div>
 
@@ -120,7 +130,7 @@
     <!-- Layout Grid -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
         
-        <!-- Left Column: Business Summary (Configured with sticky sidebar positioning and stretched alignment overrides) -->
+        <!-- Left Column: Business Summary -->
         <div class="xl:col-span-1 xl:sticky xl:top-24 self-start flex flex-col gap-6 sm:gap-8">
             <div class="glass-card rounded-3xl p-5 sm:p-8 flex flex-col">
                 <h3 class="text-base sm:text-xl font-bold mb-5 flex items-center gap-3 text-white">
@@ -180,7 +190,15 @@
 {% block scripts %}
 <script>
     const urlInput = document.getElementById('url-input');
+    const submitBtn = document.getElementById('submit-btn');
     const errorContainer = document.getElementById('error-container');
+    const resultsSection = document.getElementById('results-section');
+    const skeletonState = document.getElementById('skeleton-state');
+    const heroWrapper = document.getElementById('hero-wrapper');
+    const searchContainer = document.getElementById('search-container');
+    const freshStartBtn = document.getElementById('fresh-start-btn');
+    const bodyStatusContainer = document.getElementById('body-status-container');
+    const nocacheCheckbox = document.getElementById('nocache-checkbox');
 
     urlInput.addEventListener('input', function() {
         this.value = this.value.trim();
@@ -190,16 +208,11 @@
         errorContainer.classList.add('hidden');
     });
 
-    // Delegated layout reset handler called by base.html
+    // Reset layout handler back to default states
     window.localResetAudit = function() {
-        const resultsSection = document.getElementById('results-section');
-        const skeletonState = document.getElementById('skeleton-state');
-        const heroWrapper = document.getElementById('hero-wrapper');
-        const searchContainer = document.getElementById('search-container');
-        const freshStartBtn = document.getElementById('fresh-start-btn');
-        const bodyStatusContainer = document.getElementById('body-status-container');
-
         urlInput.value = '';
+        urlInput.disabled = false; // Re-enable text input field
+        nocacheCheckbox.checked = false; // Reset the force cache checkbox
         errorContainer.classList.add('hidden');
         resultsSection.classList.add('hidden');
         resultsSection.classList.remove('opacity-100', 'flex');
@@ -210,16 +223,19 @@
         heroWrapper.classList.remove('hero-hidden');
         searchContainer.classList.replace('max-w-5xl', 'max-w-4xl');
         
-        // Clear Stat Nodes
+        // Clear metric values
         document.getElementById('res-industry').textContent = '-';
         document.getElementById('res-score').textContent = '-';
         document.getElementById('res-hours-wasted').textContent = '-';
         document.getElementById('res-money-lost').textContent = '-';
         
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
+        
         setTimeout(() => { urlInput.focus(); }, 300);
     };
 
-    // Generic accordion toggle logic (Closes adjacent panels automatically for dynamic scrolling)
+    // Accordion visibility controller
     window.toggleAccordion = function(id) {
         const body = document.getElementById(id);
         const icon = document.getElementById(id + '-icon');
@@ -248,12 +264,8 @@
         }
     };
 
+    // Safe error log render engine
     function handleAuditError(errorMsg, suggestion = "Please verify your configuration and try again.") {
-        const submitBtn = document.getElementById('submit-btn');
-        const skeletonState = document.getElementById('skeleton-state');
-        const heroWrapper = document.getElementById('hero-wrapper');
-        const bodyStatusContainer = document.getElementById('body-status-container');
-        
         const headerStepper = document.getElementById('header-stepper');
         const headerStepperMobile = document.getElementById('header-stepper-mobile');
         if (headerStepper) {
@@ -268,7 +280,9 @@
         }
 
         let title = "Audit Interrupted";
-        if (errorMsg.includes("forbidden") || errorMsg.includes("403") || errorMsg.includes("Cloudflare")) {
+        if (errorMsg.includes("already running") || errorMsg.includes("429")) {
+            title = "Active Operation Running";
+        } else if (errorMsg.includes("forbidden") || errorMsg.includes("403") || errorMsg.includes("Cloudflare")) {
             title = "Access Blocked by Firewall";
         } else if (errorMsg.includes("timeout") || errorMsg.includes("timed out")) {
             title = "Connection Timeout";
@@ -284,6 +298,7 @@
         errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         submitBtn.disabled = false;
+        urlInput.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
         
         skeletonState.classList.add('hidden');
@@ -292,29 +307,26 @@
         heroWrapper.classList.remove('hero-hidden');
     }
 
+    // Submit listener
     document.getElementById('audit-form').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        let url = document.getElementById('url-input').value.trim();
+        let url = urlInput.value.trim();
         errorContainer.classList.add('hidden');
         
         if (url && !/^https?:\/\//i.test(url)) {
             url = 'https://' + url;
-            document.getElementById('url-input').value = url;
+            urlInput.value = url;
         }
         
-        const submitBtn = document.getElementById('submit-btn');
-        const skeletonState = document.getElementById('skeleton-state');
-        const resultsSection = document.getElementById('results-section');
-        const heroWrapper = document.getElementById('hero-wrapper');
-        const searchContainer = document.getElementById('search-container');
-        const freshStartBtn = document.getElementById('fresh-start-btn');
-        const bodyStatusContainer = document.getElementById('body-status-container');
+        // Cache bypass is explicitly governed by the user's checkbox [1]
+        const bypassCache = nocacheCheckbox.checked;
         
         heroWrapper.classList.add('hero-hidden');
         searchContainer.classList.replace('max-w-4xl', 'max-w-5xl');
         
         submitBtn.disabled = true;
+        urlInput.disabled = true; // Lock text field during analysis
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Analyzing...</span>';
         
         resultsSection.classList.add('hidden');
@@ -329,7 +341,8 @@
         
         let eventSource;
         try {
-            eventSource = new EventSource(`/api/audit?url=${encodeURIComponent(url)}`);
+            const nocacheParam = bypassCache ? '&nocache=true' : '';
+            eventSource = new EventSource(`/api/audit?url=${encodeURIComponent(url)}${nocacheParam}`);
             
             eventSource.onmessage = function(event) {
                 try {
@@ -357,8 +370,22 @@
             
             eventSource.onerror = function(err) {
                 console.error("SSE stream disconnect:", err);
-                handleAuditError("The persistent streaming context was interrupted unexpectedly.");
-                eventSource.close();
+                eventSource.close(); // Stop immediate automatic retry loops
+                
+                // Fetch dynamic error details safely
+                fetch(`/api/audit?url=${encodeURIComponent(url)}`)
+                    .then(res => {
+                        if (!res.ok && res.status === 429) {
+                            return { error: "An active audit is already running for this website. Please wait for it to finish." };
+                        }
+                        return res.json();
+                    })
+                    .then(errData => {
+                        handleAuditError(errData.error || "The persistent streaming context was interrupted unexpectedly.");
+                    })
+                    .catch(() => {
+                        handleAuditError("The persistent streaming context was interrupted unexpectedly.");
+                    });
             };
             
         } catch (err) {
@@ -368,14 +395,14 @@
         }
     });
 
+    // Populate Results
     function renderResults(data) {
-        const submitBtn = document.getElementById('submit-btn');
-        const skeletonState = document.getElementById('skeleton-state');
-        const resultsSection = document.getElementById('results-section');
-        const bodyStatusContainer = document.getElementById('body-status-container');
-        const freshStartBtn = document.getElementById('fresh-start-btn');
-        
         updateStepper('complete', 'Compiling dashboard reports...');
+        
+        // If the report came from cache, render almost instantly (50ms).
+        // If it was a fresh AI run, keep the 1.2s delay for visual transition [1].
+        const isCached = data.audit_summary && data.audit_summary.from_cache;
+        const renderDelay = isCached ? 50 : 1200;
         
         setTimeout(() => {
             // Populate Metric Row
@@ -393,9 +420,14 @@
                 scoreEl.className = "text-base min-[380px]:text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-brand-primary";
             }
 
-            document.getElementById('res-summary').textContent = data.business_summary;
+            // Cached output indicator configuration [1]
+            const cacheIndicator = isCached 
+                ? ' <span class="text-brand-accent font-mono font-bold text-xs bg-brand-accent/10 border border-brand-accent/20 px-2 py-0.5 rounded-md ml-1 inline-block"><i class="fas fa-bolt mr-1"></i> Cached Report</span>' 
+                : '';
+            
+            document.getElementById('res-summary').innerHTML = data.business_summary + cacheIndicator;
 
-            // Render Accordion-Style Issues & Bottlenecks (Protected with bounds to avoid overlapping arrows at 320px-440px widths)
+            // Render Accordion-Style Issues & Bottlenecks
             const issuesAccordion = document.getElementById('res-issues-accordion');
             issuesAccordion.innerHTML = data.issues.map((issue, index) => {
                 let borderCol = "border-l-red-500/60";
@@ -413,7 +445,7 @@
                 
                 return `
                     <div class="bg-black/40 rounded-xl border border-brand-border border-l-4 ${borderCol} hover:bg-white/[0.01] transition-all duration-300">
-                        <!-- Accordion Header Trigger (Responsive padding/margins and max-widths) -->
+                        <!-- Accordion Header Trigger -->
                         <div onclick="window.toggleAccordion('${uniqueId}-body')" class="flex items-center justify-between p-3.5 sm:p-5 cursor-pointer select-none">
                             <div class="flex flex-col gap-1 pr-2 max-w-[85%]">
                                 <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-400 break-words">${issue.type}</span>
@@ -442,7 +474,7 @@
                 
                 return `
                     <div class="bg-black/40 border border-brand-border rounded-2xl transition-all duration-300 overflow-hidden hover:border-brand-primary/40">
-                        <!-- Accordion Header Trigger (Secured layout parameters at 320px) -->
+                        <!-- Accordion Header Trigger -->
                         <div onclick="window.toggleAccordion('${uniqueId}-body')" class="p-4 sm:p-6 cursor-pointer select-none flex items-start justify-between gap-3">
                             <div class="flex-grow max-w-[85%]">
                                 <h4 class="text-sm sm:text-lg font-bold text-white mb-2 tracking-tight group-hover:text-brand-primary transition-colors break-words">${opt.opportunity}</h4>
@@ -508,9 +540,10 @@
             }
 
             submitBtn.disabled = false;
+            urlInput.disabled = false; // Re-enable input box when complete
             submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
             
-        }, 1500);
+        }, renderDelay);
     }
 </script>
 {% endblock %}
