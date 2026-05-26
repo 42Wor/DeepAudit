@@ -108,7 +108,7 @@ def run_ai_audit(url: str, combined_text: str) -> dict:
     """
     Runs the website analysis using the Gemini API.
     """
-    max_chars = 32000  
+    max_chars = 320000  
     if len(combined_text) > max_chars:
         combined_text = combined_text[:max_chars] + "\n[Content truncated due to length limits]"
     
