@@ -177,7 +177,7 @@ def run_audit():
             yield f"data: {json.dumps({'error': f'Server error: {str(e)}', 'suggestion': 'Check server logs for internal trace information.', 'progress': 0})}\n\n"
 
         finally:
-            # Always release active execution lock under all scenarios [1]
+            # Guarantee release of active execution lock under all scenarios [1]
             active_tracker.release(url)
 
     return Response(generate_audit_stream(), mimetype="text/event-stream")

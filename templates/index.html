@@ -3,12 +3,6 @@
 {% block content %}
 <!-- Hero Section -->
 <div id="hero-wrapper" class="text-center py-6 sm:py-16 px-2 mb-2 max-w-4xl mx-auto transition-all duration-700">
-    <div class="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mb-6 text-[10px] min-[380px]:text-xs font-mono tracking-wider uppercase text-gray-500">
-        <span>Developed by <a href="https://github.com/42Wor" target="_blank" class="text-gray-300 font-semibold hover:text-brand-primary transition-colors">Maaz Waheed</a></span>
-        <span class="text-gray-700 select-none">•</span>
-        <span>Powered by <a href="https://neeura.ai/" target="_blank" class="text-brand-primary hover:text-brand-secondary transition-colors font-bold tracking-widest">NEEURA.AI</a></span>
-    </div>
-    
     <h1 class="text-2xl min-[380px]:text-3xl sm:text-5xl md:text-6xl font-black mb-4 sm:mb-6 tracking-tight text-white leading-[1.15]">
         Website <span class="bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">Automation Auditor</span>
     </h1>
@@ -32,12 +26,24 @@
             </button>
         </div>
         
-        <!-- Custom Cache Bypass Trigger -->
-        <div class="flex items-center gap-2 mt-1 ml-1 select-none">
+        <!-- Custom Cache Bypass Trigger (Hidden initially, shown after a report is displayed) [1] -->
+        <div id="nocache-container" class="hidden flex items-center gap-2 mt-1 ml-1 select-none">
             <input type="checkbox" id="nocache-checkbox" class="w-4 h-4 rounded bg-black/40 border-brand-border text-brand-primary focus:ring-brand-primary/30 focus:ring-2 accent-brand-primary cursor-pointer">
             <label for="nocache-checkbox" class="text-xs font-mono font-bold text-gray-400 cursor-pointer hover:text-white transition-colors">
                 Force Re-crawl (Bypass Cache)
             </label>
+        </div>
+        
+        <!-- Integrated Branding Panel -->
+        <div class="mt-4 pt-3 border-t border-brand-border/40 flex flex-wrap items-center justify-between gap-2 text-[10px] min-[380px]:text-xs font-mono text-gray-500">
+            <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
+                <span>Developed by <a href="https://github.com/42Wor" target="_blank" class="text-gray-300 font-bold hover:text-brand-primary transition-colors">Maaz Waheed</a></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <i class="fas fa-microchip text-brand-secondary/70"></i>
+                <span>Powered by <a href="https://neeura.ai/" target="_blank" class="text-brand-primary hover:text-brand-secondary font-black tracking-wider transition-colors">NEEURA.AI</a></span>
+            </div>
         </div>
     </form>
 </div>
@@ -199,6 +205,7 @@
     const freshStartBtn = document.getElementById('fresh-start-btn');
     const bodyStatusContainer = document.getElementById('body-status-container');
     const nocacheCheckbox = document.getElementById('nocache-checkbox');
+    const nocacheContainer = document.getElementById('nocache-container');
 
     urlInput.addEventListener('input', function() {
         this.value = this.value.trim();
@@ -208,11 +215,12 @@
         errorContainer.classList.add('hidden');
     });
 
-    // Reset layout handler back to default states
+    // Reset layout handler back to default states [1]
     window.localResetAudit = function() {
         urlInput.value = '';
         urlInput.disabled = false; // Re-enable text input field
-        nocacheCheckbox.checked = false; // Reset the force cache checkbox
+        nocacheCheckbox.checked = false; // Reset force-cache selection
+        nocacheContainer.classList.add('hidden'); // Hide checkbox on reset
         errorContainer.classList.add('hidden');
         resultsSection.classList.add('hidden');
         resultsSection.classList.remove('opacity-100', 'flex');
@@ -319,7 +327,7 @@
             urlInput.value = url;
         }
         
-        // Cache bypass is explicitly governed by the user's checkbox [1]
+        // Cache bypass is explicitly governed by the user's checkbox selection [1]
         const bypassCache = nocacheCheckbox.checked;
         
         heroWrapper.classList.add('hero-hidden');
@@ -539,8 +547,15 @@
                 setTimeout(() => headerStepperMobile.style.display = 'none', 500);
             }
 
+            // Expose cache-bypass checkbox container dynamically on successful load [1]
+            nocacheContainer.classList.remove('hidden');
+
             submitBtn.disabled = false;
             urlInput.disabled = false; // Re-enable input box when complete
+            
+            // Uncheck the cache-bypass trigger automatically upon successful completion [1]
+            nocacheCheckbox.checked = false; 
+            
             submitBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Audit</span>';
             
         }, renderDelay);
